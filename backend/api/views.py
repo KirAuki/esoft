@@ -1,134 +1,186 @@
+from django.forms import ValidationError
 import django_filters
 from rest_framework.decorators import api_view
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import User, Property, Apartment, House, Land
-from .serializers import ClientSerializer, RealtorSerializer,PropertySerializer, ApartmentSerializer, HouseSerializer, LandSerializer
+from .models import  Client, Deal, Need, Offer,Property, Realtor
+from .serializers import ApartmentSerializer, ClientSerializer, DealSerializer, HouseSerializer, LandSerializer, NeedSerializer, OfferSerializer, RealtorSerializer,PropertySerializer
 from geopy.distance import geodesic
 from shapely.geometry import Point, Polygon
 import Levenshtein
 from rest_framework import filters ,viewsets,status
 from rest_framework.exceptions import NotFound
+from django.db.models import Q
 
-
-class UserViewSet(viewsets.ModelViewSet):
+class ClientViewSet(viewsets.ModelViewSet):
     """
-    Обрабатывает операции с пользователями: создание, обновление, удаление, получение списка.
+    ViewSet для управления клиентами: создание, обновление и удаление клиентов.
     """
-    queryset = User.objects.all()
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
 
-    def get_serializer_class(self):
+    def create(self, request, *args, **kwargs):
         """
-        Возвращает соответствующий сериализатор в зависимости от типа пользователя.
+        Создание нового клиента.
         """
-        if self.action in ['list', 'create']:
-            return ClientSerializer if self.request.data.get('user_type') == 'client' else RealtorSerializer
-        return ClientSerializer if self.request.user.user_type == 'client' else RealtorSerializer
-
-    def list(self, request, *args, **kwargs):
-        """
-        Получаем список всех пользователей (клиентов и риэлторов).
-        """
-        clients = User.objects.filter(user_type='client')
-        realtors = User.objects.filter(user_type='realtor')
-        
-        clients_serializer = ClientSerializer(clients, many=True)
-        realtors_serializer = RealtorSerializer(realtors, many=True)
-        
-        return Response({
-            'clients': clients_serializer.data,
-            'realtors': realtors_serializer.data
-        })
-    
-    def perform_create(self, serializer):
-        """
-        Сохраняем данные пользователя с учетом типа пользователя.
-        """
-        user_type = self.request.data.get('user_type')
-        if user_type == 'client':
-            serializer.save(user_type=user_type)
-        elif user_type == 'realtor':
-            serializer.save(user_type=user_type)
-        else:
-            raise NotFound(detail="Invalid user type")
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         """
-        Обновляем информацию о пользователе.
+        Обновление информации о клиенте.
         """
-        user = self.get_object()
-        if user.user_type != request.data.get('user_type'):
-            return Response({'error': 'User type mismatch'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        return super().update(request, *args, **kwargs)
+        client = self.get_object()
+        serializer = self.get_serializer(client, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         """
-        Удаление пользователя, проверяя связи с другими моделями.
+        Удаление клиента с проверкой на связь с потребностью, предложением или сделкой.
         """
-        user = self.get_object()
-        # Проверяем связи с другими моделями (например, потребности или предложения)
-        if hasattr(user, 'some_related_model'):
-            return Response({'error': 'User is linked to another model and cannot be deleted'}, 
-                            status=status.HTTP_400_BAD_REQUEST)
-        return super().destroy(request, *args, **kwargs)
+        client = self.get_object()
 
+        if not self.can_delete(client):
+            return Response(
+                {"error": "Клиент связан с существующей потребностью или предложением."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        self.perform_destroy(client)
+        return Response({"message": "Клиент успешно удален."}, status=status.HTTP_204_NO_CONTENT)
+
+    def can_delete(self, client):
+        """
+        Проверяет, можно ли удалить клиента.
+        """
+        if (
+            Need.objects.filter(client=client).exists() or
+            Offer.objects.filter(client=client).exists()
+        ):
+            return False
+        return True
+    
     @action(detail=False, methods=['get'], url_path='search')
     def search(self, request):
         """
-        Поиск клиентов и риэлторов по ФИО с использованием расстояния Левенштейна.
+        Поиск клиентов по ФИО с использованием расстояния Левенштейна.
         """
         search_query = request.query_params.get('query', '').strip()
 
         if not search_query:
             return Response({'error': 'Query parameter is required'}, status=400)
 
-        users = User.objects.all()
-        matching_users = []
+        search_parts = search_query.lower().split()
+        matching_clients = []
+
+        for client in Client.objects.all():
+            client_parts = [client.first_name, client.last_name, client.patronymic]
+            client_parts = [part.lower() for part in client_parts if part]
+
+            if self._is_match(search_parts, client_parts):
+                matching_clients.append(client)
+
+        serializer = self.get_serializer(matching_clients, many=True)
+        return Response(serializer.data)
+
+    def _is_match(self, search_parts, client_parts):
+        for search_part in search_parts:
+            for client_part in client_parts:
+                if Levenshtein.distance(search_part, client_part) <= 3:
+                    return True
+        return False
+
+
+class RealtorViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для управления риэлторами: создание, обновление и удаление риэлторов.
+    """
+    queryset = Realtor.objects.all()
+    serializer_class = RealtorSerializer
+
+    def create(self, request, *args, **kwargs):
+        """
+        Создание нового риэлтора.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Обновление информации о риэлторе.
+        """
+        realtor = self.get_object()
+        serializer = self.get_serializer(realtor, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Удаление риэлтора.
+        """
+        realtor = self.get_object()
+        if not self.can_delete(realtor):
+            return Response(
+                {"error": "Риелтор связан с существующей потребностью или предложением."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        self.perform_destroy(realtor)
+        return Response({"message": "Риелтор успешно удален."}, status=status.HTTP_204_NO_CONTENT)
+    
+    def can_delete(self, realtor):
+        """
+        Проверяет, можно ли удалить риелтора.
+        """
+        if (
+            Need.objects.filter(realtor=realtor).exists() or
+            Offer.objects.filter(realtor=realtor).exists()
+        ):
+            return False
+        return True
+    
+    @action(detail=False, methods=['get'], url_path='search')
+    def search(self, request):
+        """
+        Поиск риэлторов по ФИО с использованием расстояния Левенштейна.
+        """
+        search_query = request.query_params.get('query', '').strip()
+
+        if not search_query:
+            return Response({'error': 'Query parameter is required'}, status=400)
 
         search_parts = search_query.lower().split()
+        matching_realtors = []
 
-        for user in users:
-            user_parts = [user.first_name, user.last_name, user.patronymic]
-            user_parts = [part.lower() for part in user_parts if part]
+        for realtor in Realtor.objects.all():
+            realtor_parts = [realtor.first_name, realtor.last_name, realtor.patronymic]
+            realtor_parts = [part.lower() for part in realtor_parts if part]
 
-            match_found = False
-            for search_part in search_parts:
-                for user_part in user_parts:
-                    distance = Levenshtein.distance(search_part, user_part)
-                    if distance <= 3:
-                        match_found = True
-                        break
-                if match_found:
-                    break
+            if self._is_match(search_parts, realtor_parts):
+                matching_realtors.append(realtor)
 
-            if match_found:
-                matching_users.append(user)
+        serializer = self.get_serializer(matching_realtors, many=True)
+        return Response(serializer.data)
 
-        clients_data = []
-        realtors_data = []
-
-        for user in matching_users:
-            if user.user_type == 'client':
-                serializer = ClientSerializer(user)
-                clients_data.append(serializer.data)
-            else:
-                serializer = RealtorSerializer(user)
-                realtors_data.append(serializer.data)
-
-        return Response({
-            'clients': clients_data,
-            'realtors': realtors_data
-        })
-
-
+    def _is_match(self, search_parts, realtors_parts):
+        for search_part in search_parts:
+            for realtors_part in realtors_parts:
+                if Levenshtein.distance(search_part, realtors_part) <= 3:
+                    return True
+        return False
 
 class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
 
     def get_serializer_class(self):
         """
-        Возвращает сериализатор в зависимости от типа объекта недвижимости.
+        Возвращаем сериализатор в зависимости от типа недвижимости.
         """
         if self.action in ['create', 'update']:
             property_type = self.request.data.get('property_type')
@@ -139,6 +191,18 @@ class PropertyViewSet(viewsets.ModelViewSet):
             elif property_type == 'land':
                 return LandSerializer
         return PropertySerializer
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Переопределяем метод destroy для проверки связанных предложений.
+        """
+        instance = self.get_object()
+        if instance.offer_set.exists():  # Проверка на наличие связанного предложения
+            return Response(
+                {'error': 'This property is linked to an offer and cannot be deleted.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().destroy(request, *args, **kwargs)
 
     
     @action(detail=False, methods=['get'])
@@ -219,3 +283,127 @@ class PropertyViewSet(viewsets.ModelViewSet):
 
         serializer = PropertySerializer(matching_properties, many=True)
         return Response(serializer.data)
+    
+class OfferViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с предложениями: создание, редактирование, удаление.
+    """
+    queryset = Offer.objects.all()
+    serializer_class = OfferSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Проверяем, участвует ли предложение в сделке перед удалением.
+        """
+        offer = self.get_object()
+        if offer.is_in_deal():
+            return Response({'error': 'This offer is part of a deal and cannot be deleted.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        return super().destroy(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['get'], url_path='matching-needs')
+    def matching_needs(self, request, pk=None):
+        """
+        Возвращает список потребностей, которые могут быть удовлетворены данным предложением.
+        """
+        offer = self.get_object()
+
+        matching_needs = Need.objects.filter(
+            property_type=offer.property.property_type,
+            min_price__lte=offer.price,
+            max_price__gte=offer.price,
+        )
+
+        # Дополнительные условия для фильтрации
+        if offer.property.area:
+            matching_needs = matching_needs.filter(
+                Q(min_area__lte=offer.property.area) | Q(min_area__isnull=True),
+                Q(max_area__gte=offer.property.area) | Q(max_area__isnull=True),
+            )
+
+        serializer = NeedSerializer(matching_needs, many=True)
+        return Response({
+            'needs': serializer.data,
+            'create_deal_endpoint': request.build_absolute_uri('/api/deals/')
+        })
+    
+class NeedViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы с потребностями: создание, редактирование, удаление.
+    """
+    queryset = Need.objects.all()
+    serializer_class = NeedSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Проверяем, участвует ли потребность в сделке перед удалением.
+        """
+        need = self.get_object()
+        if need.is_in_deal():
+            return Response({'error': 'This need is part of a deal and cannot be deleted.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        return super().destroy(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['get'], url_path='matching-offers')
+    def matching_offers(self, request, pk=None):
+        """
+        Возвращает список предложений, которые удовлетворяют выбранную потребность.
+        """
+        need = self.get_object()
+
+        matching_offers = Offer.objects.filter(
+            property__property_type=need.property_type,
+            price__gte=need.min_price,
+            price__lte=need.max_price,
+        )
+
+        # Дополнительные условия для фильтрации
+        if need.min_area:
+            matching_offers = matching_offers.filter(property__area__gte=need.min_area)
+        if need.max_area:
+            matching_offers = matching_offers.filter(property__area__lte=need.max_area)
+
+        serializer = OfferSerializer(matching_offers, many=True)
+        return Response({
+            'offers': serializer.data,
+            'create_deal_endpoint': request.build_absolute_uri('/api/deals/')
+        })
+
+class DealViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для работы со сделками: создание, редактирование, удаление.
+    """
+    queryset = Deal.objects.all()
+    serializer_class = DealSerializer
+
+    
+
+    def create(self, request, *args, **kwargs):
+        """
+        Проверяем, можно ли создать сделку.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer):
+        """
+        Обновляем состояние потребности и предложения при создании сделки.
+        """
+        deal = serializer.save()
+        deal.need.is_active = False
+        deal.need.save()
+        deal.offer.is_active = False
+        deal.offer.save()
+
+    @action(detail=True, methods=['get'], url_path='commissions')
+    def retrieve_commissions(self, request, pk=None):
+        """
+        Возвращает рассчитанные комиссии и отчисления для выбранной сделки.
+        """
+        deal = self.get_object()
+        commissions = deal.calculate_commissions()
+        return Response(commissions)
+
+    
