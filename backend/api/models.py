@@ -18,7 +18,7 @@ class Client(models.Model):
         Проверка, что хотя бы одно из полей phone или email заполнено.
         """
         if not self.phone and not self.email:
-            raise ValidationError("Client must have either a phone number or an email address.")
+            raise ValidationError("Клиент хотя бы должен иметь номер телефона или email.")
 
 class Realtor(models.Model):
     last_name = models.CharField(max_length=50)
@@ -40,17 +40,24 @@ class Realtor(models.Model):
 
 
 class PropertyType(models.TextChoices):
-    APARTMENT = 'apartment', 'Apartment'
-    HOUSE = 'house', 'House'
-    LAND = 'land', 'Land'
+    APARTMENT = 'Квартира', 'Квартира'
+    HOUSE = 'Дом', 'Дом'
+    LAND = 'Земля', 'Земля'
 
 
 class Property(models.Model):
-    property_type = models.CharField(max_length=10, choices=PropertyType.choices)
+    property_type = models.CharField(
+        max_length=10, 
+        choices=PropertyType.choices
+    )
+    
+    # Адрес
     city = models.CharField(max_length=100, blank=True, null=True)
     street = models.CharField(max_length=100, blank=True, null=True)
     house_number = models.CharField(max_length=10, blank=True, null=True)
     apartment_number = models.CharField(max_length=10, blank=True, null=True)
+    
+    # Координаты
     latitude = models.FloatField(
         blank=True, null=True,
         validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)]
@@ -60,39 +67,33 @@ class Property(models.Model):
         validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)]
     )
 
-    @property
-    def address(self):
-        return f"{self.city or ''}, {self.street or ''}, {self.house_number or ''}, {self.apartment_number or ''}".strip(", ")
+    # Общие поля для всех типов недвижимости
+    area = models.FloatField(blank=True, null=True)  # Площадь (для всех типов)
+    
+    # Поля для квартир
+    floor = models.IntegerField(blank=True, null=True)  # Этаж (только для квартир)
+    rooms = models.IntegerField(blank=True, null=True)  # Количество комнат (для квартир и домов)
+
+    # Поля для домов
+    floors = models.IntegerField(blank=True, null=True)  # Этажность (только для домов)
 
     def __str__(self):
-        return f"{self.get_property_type_display()} - {self.address or 'No Address'}"
+        return f"{self.get_property_type_display()} - {self.address or 'Нет адреса'}"
 
+    @property
+    def address(self):
+        components = [
+            self.city,
+            self.street,
+            self.house_number,
+            f"кв. {self.apartment_number}" if self.apartment_number else None
+        ]
+        return ", ".join(filter(None, components))
 
-class Apartment(Property):
-    floor = models.IntegerField(blank=True, null=True)  # Этаж
-    rooms = models.IntegerField(blank=True, null=True)  # Количество комнат
-    area = models.FloatField(blank=True, null=True)  # Общая площадь
 
     class Meta:
-        verbose_name = "Apartment"
-        verbose_name_plural = "Apartments"
-
-
-class House(Property):
-    floors = models.IntegerField(blank=True, null=True)  # Этажность дома
-    rooms = models.IntegerField(blank=True, null=True)  # Количество комнат
-    area = models.FloatField(blank=True, null=True)  # Общая площадь
-
-    class Meta:
-        verbose_name = "House"
-        verbose_name_plural = "Houses"
-
-class Land(Property):
-    area = models.FloatField(blank=True, null=True)  # Общая площадь
-
-    class Meta:
-        verbose_name = "Land"
-        verbose_name_plural = "Lands"
+        verbose_name = "Property"
+        verbose_name_plural = "Properties"
 
 class Offer(models.Model):
     client = models.ForeignKey(
@@ -114,7 +115,7 @@ class Offer(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.is_in_deal():
-            raise ValidationError("This offer cannot be deleted as it is part of an existing deal.")
+            raise ValidationError("Это предложение не может быть удалено, так как является частью сделки.")
         super().delete(*args, **kwargs)
 
     def __str__(self):
@@ -163,7 +164,7 @@ class Need(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.is_in_deal():
-            raise ValidationError("This need cannot be deleted as it is part of an existing deal.")
+            raise ValidationError("Эта потребность не может быть удалена, так как является частью сделки..")
         super().delete(*args, **kwargs)
 
     def __str__(self):

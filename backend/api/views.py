@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import  Client, Deal, Need, Offer,Property, Realtor
-from .serializers import ApartmentSerializer, ClientSerializer, DealSerializer, HouseSerializer, LandSerializer, NeedSerializer, OfferSerializer, RealtorSerializer,PropertySerializer
+from .serializers import ClientSerializer, DealSerializer, NeedSerializer, OfferSerializer, RealtorSerializer,PropertySerializer
 from geopy.distance import geodesic
 from shapely.geometry import Point, Polygon
 import Levenshtein
@@ -177,112 +177,96 @@ class RealtorViewSet(viewsets.ModelViewSet):
 
 class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
+    serializer_class = PropertySerializer
 
-    def get_serializer_class(self):
+    def get_queryset(self):
         """
-        Возвращаем сериализатор в зависимости от типа недвижимости.
+        Переопределенный метод для фильтрации объектов недвижимости
+        по типу и адресу, а также поддерживающий поиск по регионам.
         """
-        if self.action in ['create', 'update']:
-            property_type = self.request.data.get('property_type')
-            if property_type == 'apartment':
-                return ApartmentSerializer
-            elif property_type == 'house':
-                return HouseSerializer
-            elif property_type == 'land':
-                return LandSerializer
-        return PropertySerializer
+        queryset = super().get_queryset()
 
-    def destroy(self, request, *args, **kwargs):
-        """
-        Переопределяем метод destroy для проверки связанных предложений.
-        """
-        instance = self.get_object()
-        if instance.offer_set.exists():  # Проверка на наличие связанного предложения
-            return Response(
-                {'error': 'This property is linked to an offer and cannot be deleted.'},
-                status=status.HTTP_400_BAD_REQUEST
+        # Фильтрация по типу недвижимости
+        property_type = self.request.query_params.get('property_type')
+        if property_type:
+            queryset = queryset.filter(property_type=property_type)
+
+        # Фильтрация по адресу
+        address = self.request.query_params.get('address')
+        if address:
+            queryset = queryset.filter(
+                Q(city__icontains=address) |
+                Q(street__icontains=address) |
+                Q(house_number__icontains=address) |
+                Q(apartment_number__icontains=address)
             )
-        return super().destroy(request, *args, **kwargs)
 
-    
+        return queryset
+
     @action(detail=False, methods=['get'])
     def search_by_address(self, request):
         """
-        Поиск объектов недвижимости по адресу с использованием расстояния Левенштейна.
+        Нечёткий поиск объектов недвижимости по адресу.
         """
         query = request.query_params.get('query', '').strip().lower()
         if not query:
             return Response({'error': 'Query parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Разбиваем запрос на части
         query_parts = query.split()
-
         properties = Property.objects.all()
         matching_properties = []
 
         for property in properties:
-            # Подготовка частей адреса
-            city = (property.city or '').lower()
-            street = (property.street or '').lower()
-            house_number = (property.house_number or '').lower()
-            apartment_number = (property.apartment_number or '').lower()
+            matches = {
+                'city': property.city or '',
+                'street': property.street or '',
+                'house_number': property.house_number or '',
+                'apartment_number': property.apartment_number or '',
+            }
 
-            # Расчёт расстояний для каждой части
-            city_distance = min([Levenshtein.distance(query_part, city) for query_part in query_parts], default=100)
-            if city_distance <= 3:
-                matching_properties.append(property)
-                print(f"Matched by City: {property}, Distance: {city_distance}")
-                continue  # Если город подходит, остальные параметры не проверяем
+            distances = {
+                key: min([Levenshtein.distance(query_part, matches[key].lower()) for query_part in query_parts], default=100)
+                for key in matches
+            }
 
-            street_distance = min([Levenshtein.distance(query_part, street) for query_part in query_parts], default=100)
-            if street_distance <= 3:
+            if (
+                distances['city'] <= 3 or
+                distances['street'] <= 3 or
+                (distances['house_number'] <= 1 if matches['house_number'] else False) or
+                (distances['apartment_number'] <= 1 if matches['apartment_number'] else False)
+            ):
                 matching_properties.append(property)
-                print(f"Matched by Street: {property}, Distance: {street_distance}")
-                continue  # Если улица подходит, остальные параметры не проверяем
-
-            house_distance = (
-                min([Levenshtein.distance(query_part, house_number) for query_part in query_parts], default=100)
-                if house_number else 0
-            )
-            if house_number and house_distance <= 1:
-                matching_properties.append(property)
-                print(f"Matched by House: {property}, Distance: {house_distance}")
-                continue  # Если номер дома подходит, остальные параметры не проверяем
-
-            apartment_distance = (
-                min([Levenshtein.distance(query_part, apartment_number) for query_part in query_parts], default=100)
-                if apartment_number else 0
-            )
-            if apartment_number and apartment_distance <= 1:
-                matching_properties.append(property)
-                print(f"Matched by Apartment: {property}, Distance: {apartment_distance}")
-                continue  # Если номер квартиры подходит, остальные параметры не проверяем
 
         serializer = PropertySerializer(matching_properties, many=True)
         return Response(serializer.data)
-
-
-
 
     @action(detail=False, methods=['get'])
-    def search_by_polygon(self, request):
+    def search_in_region(self, request):
         """
-        Поиск объектов недвижимости, находящихся внутри указанного района.
+        Поиск объектов недвижимости внутри района (полигона).
         """
-        polygon_coords = request.query_params.getlist('polygon', [])
-        if not polygon_coords:
-            return Response({'error': 'Polygon coordinates are required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            coordinates = request.query_params.getlist('coordinates')
+            if not coordinates:
+                return Response({'error': 'Coordinates are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        polygon = Polygon([(float(lat), float(lon)) for lat, lon in (coord.split(',') for coord in polygon_coords)])
-        matching_properties = []
+            # Преобразование координат в полигон
+            points = [tuple(map(float, point.split(','))) for point in coordinates]
+            if len(points) < 3:
+                return Response({'error': 'At least 3 points are required to form a polygon.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        for property in Property.objects.filter(latitude__isnull=False, longitude__isnull=False):
-            property_point = Point(property.latitude, property.longitude)
-            if polygon.contains(property_point):
-                matching_properties.append(property)
+            polygon = Polygon(points)
 
-        serializer = PropertySerializer(matching_properties, many=True)
-        return Response(serializer.data)
+            # Поиск объектов внутри полигона
+            properties = Property.objects.filter(location__within=polygon)
+            serializer = PropertySerializer(properties, many=True)
+            return Response(serializer.data)
+        except ValueError:
+            return Response({'error': 'Invalid coordinates format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
     
 class OfferViewSet(viewsets.ModelViewSet):
     """

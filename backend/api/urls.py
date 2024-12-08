@@ -16,5 +16,5 @@ urlpatterns = [
     path('', include(router.urls)),
     # Дополнительные пути для кастомных действий
     path('properties/search/address/', PropertyViewSet.as_view({'get': 'search_by_address'}), name='property-search-by-address'),
-    path('properties/search/polygon/', PropertyViewSet.as_view({'get': 'search_by_polygon'}), name='property-search-by-polygon'),
+    path('properties/search/polygon/', PropertyViewSet.as_view({'get': 'search_in_region'}), name='property-search-by-polygon'),
 ]

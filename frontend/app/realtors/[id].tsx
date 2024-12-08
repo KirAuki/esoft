@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import axios from 'axios';
-import { Realtor } from '@/types/types';
-import { useLocalSearchParams } from 'expo-router';
-import RealtorForm from '@/components/RealtorForm';
-import { API_BASE_URL } from '@/constants/Api';
-
+import React, { useState, useEffect } from "react";
+import { View, Text, Button, StyleSheet } from "react-native";
+import axios from "axios";
+import { Realtor } from "@/types/types";
+import { useLocalSearchParams } from "expo-router";
+import RealtorForm from "@/components/RealtorForm";
+import { API_BASE_URL } from "@/constants/Api";
 
 function RealtorDetails() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,17 +15,15 @@ function RealtorDetails() {
     async function fetchRealor() {
         setLoading(true);
         try {
-        const response = await axios.get(`${API_BASE_URL}/realtors/${id}/`);
-        setRealtor(response.data);
+            const response = await axios.get(`${API_BASE_URL}/realtors/${id}/`);
+            setRealtor(response.data);
         } catch (error) {
-        console.log('Ошибка при загрузке клиента:', error);
+            console.log("Ошибка при загрузке клиента:", error);
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     }
     useEffect(() => {
-        
-
         fetchRealor();
     }, [id]);
 
@@ -36,10 +33,13 @@ function RealtorDetails() {
 
     return (
         <View style={styles.container}>
-            <Text>{`ФИО: ${realtor?.last_name || ''} ${realtor?.first_name || ''} ${realtor?.patronymic || ''}`}</Text>
-            <Text>{`Коммисия: ${realtor?.commission_share || '-'}`}</Text>
+            <Text>{`ФИО: ${realtor?.last_name || ""} ${realtor?.first_name || ""} ${realtor?.patronymic || ""}`}</Text>
+            <Text>{`Коммисия: ${realtor?.commission_share || "-"}`}</Text>
 
-            <Button title="Редактировать клиента" onPress={() => setModalVisible(true)} />
+            <Button
+                title="Редактировать клиента"
+                onPress={() => setModalVisible(true)}
+            />
 
             <RealtorForm
                 realtor={realtor}
@@ -52,9 +52,9 @@ function RealtorDetails() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
+    container: {
+        padding: 16,
+    },
 });
 
 export default RealtorDetails;

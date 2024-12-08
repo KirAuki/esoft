@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Client, Deal, Need, Offer,Property, Realtor,Apartment,House,Land
+from .models import Client, Deal, Need, Offer,Property, Realtor
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
@@ -17,30 +17,29 @@ class RealtorAdmin(admin.ModelAdmin):
 
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
-    list_display = ('property_type', 'address', 'latitude', 'longitude')
+    # Поля, которые будут отображаться в списке объектов недвижимости
+    list_display = (
+        'id','property_type', 'city','street','house_number','apartment_number','latitude','longitude','area','floor','rooms','floors'
+    )
+    
+    # Фильтрация объектов недвижимости в админке
+    list_filter = ('property_type', 'city', 'rooms')
+
+    # Поля, которые можно будет искать
     search_fields = ('city', 'street', 'house_number', 'apartment_number')
-    list_filter = ('property_type',)
-    ordering = ('property_type',)
 
-@admin.register(Apartment)
-class ApartmentAdmin(admin.ModelAdmin):
-    list_display = ('address', 'floor', 'rooms', 'area')
-    search_fields = ('city', 'street', 'house_number', 'apartment_number')
-    list_filter = ('floor', 'rooms')
-
-@admin.register(House)
-class HouseAdmin(admin.ModelAdmin):
-    list_display = ('address', 'floors', 'rooms', 'area')
-    search_fields = ('city', 'street', 'house_number', 'apartment_number')
-    list_filter = ('floors', 'rooms')
-
-class LandAdmin(admin.ModelAdmin):
-    list_display = ('address', 'area')
-    search_fields = ('city', 'street', 'house_number', 'apartment_number')
-    list_filter = ('area',)
-    ordering = ('address',)
-
-
+    # Группировка полей для редактирования в форме
+    fieldsets = (
+        ('Общая информация', {
+            'fields': ('property_type', 'city', 'street', 'house_number', 'apartment_number')
+        }),
+        ('Координаты', {
+            'fields': ('latitude', 'longitude')
+        }),
+        ('Детали объекта', {
+            'fields': ('area', 'floor', 'rooms', 'floors')
+        }),
+    )
 
 @admin.register(Offer)
 class OfferAdmin(admin.ModelAdmin):
