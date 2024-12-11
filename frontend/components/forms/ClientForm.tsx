@@ -9,15 +9,15 @@ import {
     TouchableOpacity,
 } from "react-native";
 import axios from "axios";
-import Input from "./input";
+import Input from "../input";
 import { API_BASE_URL } from "@/constants/Api";
 import { Client, Errors } from "@/types/types";
 
 interface ClientFormProps {
-    client?: Client; // Объект клиента для редактирования
-    isVisible: boolean; // Состояние видимости модала
-    onClose: () => void; // Функция для закрытия модала
-    onUpdate: () => void; // Функция для обновления клиента в родительском компоненте
+    client?: Client | null;
+    isVisible: boolean;
+    onClose: () => void;
+    onUpdate: () => void;
 }
 
 function ClientForm({ client, isVisible, onClose, onUpdate }: ClientFormProps) {
@@ -42,7 +42,7 @@ function ClientForm({ client, isVisible, onClose, onUpdate }: ClientFormProps) {
     }, [client, isVisible]);
 
     const validateForm = () => {
-        const newErrors: Errors = {}; // Локальная переменная для новых ошибок
+        const newErrors: Errors = {};
 
         if (!phone && !email) {
             newErrors.phone_email = "Нужно ввести номер телефона либо почту.";
@@ -57,7 +57,7 @@ function ClientForm({ client, isVisible, onClose, onUpdate }: ClientFormProps) {
                 "Номер телефона должен быть формата +7 или 8 и содержать 10 цифр.";
         }
 
-        setErrors(newErrors); // Установка новых ошибок
+        setErrors(newErrors);
     };
     const handleSubmit = () => {
         validateForm();
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     closeButtonText: {
-        color:'#ff0000',
+        color: "#ff0000",
     },
 });
 

@@ -272,8 +272,23 @@ class OfferViewSet(viewsets.ModelViewSet):
     """
     ViewSet для работы с предложениями: создание, редактирование, удаление.
     """
-    queryset = Offer.objects.all()
     serializer_class = OfferSerializer
+
+    def get_queryset(self):
+        """
+        Фильтрация предложений по client и realtor (если переданы параметры).
+        """
+        queryset = Offer.objects.all()
+
+        client_id = self.request.query_params.get('client', None)
+        realtor_id = self.request.query_params.get('realtor', None)
+
+        if client_id:
+            queryset = queryset.filter(client__id=client_id)
+        if realtor_id:
+            queryset = queryset.filter(realtor__id=realtor_id)
+
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -281,7 +296,7 @@ class OfferViewSet(viewsets.ModelViewSet):
         """
         offer = self.get_object()
         if offer.is_in_deal():
-            return Response({'error': 'This offer is part of a deal and cannot be deleted.'},
+            return Response({'error': 'Это предложение не может быть удалено, так как является частью сделки.'},
                             status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, *args, **kwargs)
     
@@ -315,8 +330,24 @@ class NeedViewSet(viewsets.ModelViewSet):
     """
     ViewSet для работы с потребностями: создание, редактирование, удаление.
     """
-    queryset = Need.objects.all()
+    
     serializer_class = NeedSerializer
+
+    def get_queryset(self):
+        """
+        Фильтрация потребностей по client и realtor (если переданы параметры).
+        """
+        queryset = Need.objects.all()
+
+        client_id = self.request.query_params.get('client', None)
+        realtor_id = self.request.query_params.get('realtor', None)
+
+        if client_id:
+            queryset = queryset.filter(client__id=client_id)
+        if realtor_id:
+            queryset = queryset.filter(realtor__id=realtor_id)
+
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -324,7 +355,7 @@ class NeedViewSet(viewsets.ModelViewSet):
         """
         need = self.get_object()
         if need.is_in_deal():
-            return Response({'error': 'This need is part of a deal and cannot be deleted.'},
+            return Response({'error': 'Эта потребность учавствует в сделке.'},
                             status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, *args, **kwargs)
     

@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import { Text, Button, ActivityIndicator, ScrollView,StyleSheet, View } from "react-native";
 import axios from "axios";
 import { Client } from "@/types/types";
 import { useLocalSearchParams } from "expo-router";
-import ClientForm from "@/components/ClientForm";
+import ClientForm from "@/components/forms/ClientForm";
 import { API_BASE_URL } from "@/constants/Api";
+import { baseStyles } from "@/styles/baseStyle";
+import { useForm } from "@/hooks/useForm";
+import RelatedList from "@/components/RelatedList";
 
 function ClientDetails() {
+    const {
+        formVisible,
+        setFormVisible,
+        handleCloseForm,
+        handleEdit,
+        handleUpdate,
+    } = useForm<Client | null>(null, fetchClient);
+
     const { id } = useLocalSearchParams<{ id: string }>();
     const [client, setClient] = useState<Client>();
     const [loading, setLoading] = useState(false);
-    const [isModalVisible, setModalVisible] = useState(false);
 
     async function fetchClient() {
         setLoading(true);
@@ -27,34 +37,34 @@ function ClientDetails() {
         fetchClient();
     }, [id]);
 
-    const handleClientUpdate = async () => {
-        await fetchClient();
-    };
+    if (loading) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+    }
 
     return (
-        <View style={styles.container}>
-            <Text>{`ФИО: ${client?.last_name || ""} ${client?.first_name || ""} ${client?.patronymic || ""}`}</Text>
-            <Text>{`Телефон: ${client?.phone || "не указан"}  Почта: ${client?.email || "не указана"}`}</Text>
-
+        <ScrollView contentContainerStyle={baseStyles.container}>
+            <View style={baseStyles.objectInfo}>
+                <Text>{`ФИО: ${client?.last_name || ""} ${client?.first_name || ""} ${client?.patronymic || ""}`}</Text>
+                <Text>{`Телефон: ${client?.phone || "не указан"}  Почта: ${client?.email || "не указана"}`}</Text>
+            </View>
             <Button
                 title="Редактировать клиента"
-                onPress={() => setModalVisible(true)}
+                onPress={() => setFormVisible(true)}
             />
 
+            <RelatedList clientId={Number(id)} />
             <ClientForm
                 client={client}
-                isVisible={isModalVisible}
-                onClose={() => setModalVisible(false)}
-                onUpdate={handleClientUpdate}
+                isVisible={formVisible}
+                onClose={handleCloseForm}
+                onUpdate={handleUpdate}
             />
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-    },
+    
 });
 
 export default ClientDetails;

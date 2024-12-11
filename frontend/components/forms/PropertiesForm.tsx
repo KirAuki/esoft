@@ -10,10 +10,11 @@ import {
     Alert,
     TouchableOpacity,
     StyleSheet,
+    ScrollView,
 } from "react-native";
 import { Property } from "@/types/types";
-import Input from "./input";
-import Dropdown from "./Dropdown";
+import Input from "../input";
+import Dropdown from "../Dropdown";
 
 type PropertyFormProps = {
     property?: Property | null;
@@ -111,10 +112,11 @@ function PropertyForm({
                     onUpdate();
                     onClose();
                 })
-                .catch(() => {
+                .catch((errori) => {
+                    console.log(errori);
                     Alert.alert(
                         "Ошибка",
-                        `Не удалось ${property ? "обновить" : "создать"} объект недвижимости.`,
+                        `Не удалось ${property ? "обновить" : "создать"} объект недвижимости. ${errori}`,
                     );
                 })
                 .finally(() => {
@@ -131,7 +133,7 @@ function PropertyForm({
             animationType="slide"
             onRequestClose={onClose}
         >
-            <View style={styles.container}>
+            <ScrollView contentContainerStyle={styles.container}>
                 <Text style={styles.title}>
                     {property
                         ? "Редактирование недвижимости"
@@ -152,6 +154,7 @@ function PropertyForm({
                     label="Номер дома"
                     value={houseNumber}
                     onChange={setHouseNumber}
+                    keyboardType="numeric"
                 />
                 {errors.houseNumber && (
                     <Text style={styles.errorText}>{errors.houseNumber}</Text>
@@ -161,6 +164,7 @@ function PropertyForm({
                     label="Номер квартиры"
                     value={apartmentNumber}
                     onChange={setApartmentNumber}
+                    keyboardType="numeric"
                 />
                 {errors.apartmentNumber && (
                     <Text style={styles.errorText}>
@@ -193,9 +197,9 @@ function PropertyForm({
                     selectedValue={propertyType}
                     onValueChange={(value) => setPropertyType(String(value))}
                     options={[
-                        { label: "Квартира", value: "apartment" },
-                        { label: "Дом", value: "house" },
-                        { label: "Земля", value: "land" },
+                        { label: "Квартира", value: "Квартира" },
+                        { label: "Дом", value: "Дом" },
+                        { label: "Земля", value: "Земля" },
                     ]}
                 />
                 {errors.property_type && (
@@ -211,7 +215,7 @@ function PropertyForm({
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                     <Text style={styles.closeButtonText}>Закрыть</Text>
                 </TouchableOpacity>
-            </View>
+            </ScrollView>
         </Modal>
     );
 }
@@ -239,7 +243,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     closeButtonText: {
-        color:'#ff0000',
+        color: "#ff0000",
         fontSize: 16,
     },
 });

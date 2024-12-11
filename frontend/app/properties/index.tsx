@@ -4,45 +4,49 @@ import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     Button,
-    FlatList,
     TextInput,
     View,
     Text,
-    StyleSheet,
     Alert,
     Switch,
     TouchableOpacity,
+    ScrollView,
+    ActivityIndicator,
 } from "react-native";
 import { Property } from "@/types/types";
 import { handleDelete } from "@/hooks/handleDelete";
-import PropertyForm from "@/components/PropertiesForm";
+import PropertyForm from "@/components/forms/PropertiesForm";
+import { baseStyles } from "@/styles/baseStyle";
+import { useForm } from "@/hooks/useForm";
 
 function PropertiesList() {
+    const {
+        formVisible,
+        currentItem,
+        handleCreate,
+        handleEdit,
+        handleCloseForm,
+        handleUpdate,
+    } = useForm<Property | null>(null, fetchProperties);
+
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
-    const [searchQuery, setSearchQuery] = useState<string>(""); // Для поиска по адресу
+    const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchType, setSearchType] = useState<"address" | "polygon">(
         "address",
     );
-    const [polygonCoordinates, setPolygonCoordinates] = useState<string[]>([]); // Для поиска по региону
-    const [propertyType, setPropertyType] = useState<string>(""); // Для фильтрации по типу недвижимости
-    const [isPropertyFormVisible, setIsPropertyFormVisible] = useState(false);
-    const [editingProperty, setEditingProperty] = useState<Property | null>(
-        null,
-    );
+    const [polygonCoordinates, setPolygonCoordinates] = useState<string[]>([]);
+    const [propertyType, setPropertyType] = useState<string>("");
 
-    // Функция для загрузки объектов недвижимости
     async function fetchProperties() {
         setLoading(true);
         try {
             const params: Record<string, any> = {
-                address: searchQuery, // Поиск по адресу
-                property_type: propertyType, // Фильтрация по типу недвижимости
+                address: searchQuery,
+                property_type: propertyType,
             };
 
             let endpoint = `${API_BASE_URL}/properties/`;
-
-            // Определяем endpoint в зависимости от типа поиска
             if (searchQuery) {
                 if (searchType === "address") {
                     endpoint = `${API_BASE_URL}/properties/search_by_address/`;
@@ -65,47 +69,39 @@ function PropertiesList() {
 
     useEffect(() => {
         fetchProperties();
-    }, [searchQuery, searchType, polygonCoordinates, propertyType]);
+    }, []);
+
+    useEffect(() => {
+        fetchProperties();
+    }, [propertyType]);
 
     const handleSearchChange = (text: string) => {
         setSearchQuery(text);
     };
 
+    const handleSearchSubmit = () => {
+        fetchProperties();
+    };
+
     const toggleSearchType = () => {
         setSearchType((prevType) => {
             if (prevType === "address") {
-                // Сбросить строку поиска для координат
                 setPolygonCoordinates([]);
                 return "polygon";
             } else {
-                // Сбросить строку поиска для адреса
                 setSearchQuery("");
                 return "address";
             }
         });
     };
 
-    const handleCreateProperty = () => {
-        setEditingProperty(null); // Обнуляем объект при создании нового
-        setIsPropertyFormVisible(true);
-    };
-
-    const handleEditProperty = (property: Property) => {
-        setEditingProperty(property); // Передаем объект для редактирования
-        setIsPropertyFormVisible(true);
-    };
-
-    const handleCloseForm = () => {
-        setIsPropertyFormVisible(false);
-    };
-
-    const handleUpdateProperties = () => {
-        fetchProperties();
-    };
+    if (loading) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+    }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.searchControls}>
+        <ScrollView contentContainerStyle={baseStyles.container}>
+            <View style={baseStyles.searchControls}>
                 <Text>Поиск по адресу</Text>
                 <Switch
                     value={searchType === "polygon"}
@@ -120,7 +116,9 @@ function PropertiesList() {
                     placeholder="Введите адрес для поиска..."
                     value={searchQuery}
                     onChangeText={handleSearchChange}
-                    style={styles.searchInput}
+                    onSubmitEditing={handleSearchSubmit}
+                    returnKeyType="search"
+                    style={baseStyles.searchInput}
                 />
             ) : (
                 <TextInput
@@ -131,25 +129,25 @@ function PropertiesList() {
                             text.split(",").map((s) => s.trim()),
                         )
                     }
-                    style={styles.searchInput}
+                    style={baseStyles.searchInput}
                 />
             )}
 
-            <View style={styles.propertyTypeButtons}>
+            <View style={baseStyles.filterButtons}>
                 {["Квартира", "Дом", "Земля"].map((type) => (
                     <TouchableOpacity
                         key={type}
                         style={[
-                            styles.propertyTypeButton,
-                            propertyType === type && styles.selectedButton,
+                            baseStyles.filterButton,
+                            propertyType === type && baseStyles.selectedButton,
                         ]}
                         onPress={() => setPropertyType(type)}
                     >
                         <Text
                             style={[
-                                styles.propertyTypeButtonText,
+                                baseStyles.filterButtonText,
                                 propertyType === type &&
-                                    styles.selectedButtonText,
+                                    baseStyles.selectedButtonText,
                             ]}
                         >
                             {type}
@@ -157,31 +155,19 @@ function PropertiesList() {
                     </TouchableOpacity>
                 ))}
             </View>
-
-            <FlatList
-                data={properties}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <View style={styles.propertiesContainer}>
-                        <Link
-                            href={{
-                                pathname: "/properties/[id]",
-                                params: { id: item.id },
-                            }}
-                            style={styles.propertyLink}
-                        >
-                            <View>
-                                <Text
-                                    style={styles.propertyName}
-                                >{`Тип: ${item.property_type}`}</Text>
-                                <Text>{`Адрес: ${item.address}`}</Text>
-                                <Text>{`Площадь: ${item.area || "не указана"}, Комнаты: ${item.rooms || "не указано"}, Этаж: ${item.floor || "не указан"}, Этажность: ${item.floors || "не указана"}`}</Text>
-                            </View>
-                        </Link>
-                        <View style={styles.propertyActionButtons}>
+            <Button title="Создать новое имущество" onPress={handleCreate} />
+            {properties.length > 0 ? (
+                properties.map((item) => (
+                    <View key={item.id} style={baseStyles.objectsContainer}>
+                        <View style={baseStyles.objectInfo}>
+                            <Text>{`Тип: ${item.property_type}`}</Text>
+                            <Text>{`Адрес: ${item.address}`}</Text>
+                            <Text>{`Площадь: ${item.area || "не указана"}, Комнаты: ${item.rooms || "не указано"}, Этаж: ${item.floor || "не указан"}, Этажность: ${item.floors || "не указана"}`}</Text>
+                        </View>
+                        <View style={baseStyles.objectActionButtons}>
                             <Button
                                 title="Редактировать"
-                                onPress={() => handleEditProperty(item)}
+                                onPress={() => handleEdit(item)}
                             />
                             <Button
                                 title="Удалить"
@@ -194,95 +180,21 @@ function PropertiesList() {
                                 }
                                 color="red"
                             />
-                        </View>  
+                        </View>
                     </View>
-                )}
-                ListEmptyComponent={
-                    <Text>Список объектов недвижимости пуст.</Text>
-                }
-                refreshing={loading}
-                onRefresh={fetchProperties}
-            />
+                ))
+            ) : (
+                <Text>Список объектов недвижимости пуст.</Text>
+            )}
 
-            <Button
-                title="Создать новое имущество"
-                onPress={handleCreateProperty}
-            />
             <PropertyForm
-                property={editingProperty}
-                isVisible={isPropertyFormVisible}
+                property={currentItem}
+                isVisible={formVisible}
                 onClose={handleCloseForm}
-                onUpdate={handleUpdateProperties}
+                onUpdate={handleUpdate}
             />
-        </View>
+        </ScrollView>
     );
 }
 
 export default PropertiesList;
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-    },
-    searchControls: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        alignItems: "center",
-        marginBottom: 16,
-    },
-    searchInput: {
-        height: 40,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 4,
-        paddingHorizontal: 8,
-        marginBottom: 16,
-    },
-    propertiesContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginTop: 16,
-        marginBottom: 16,
-        padding: 12,
-        backgroundColor: "#f9f9f9",
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "#ddd",
-    },
-    propertyLink: {
-        flexDirection: "column",
-        gap: 10,
-    },
-    propertyName: {
-        fontSize: 16,
-        fontWeight: "bold",
-        marginBottom: 4,
-    },
-    propertyActionButtons: {
-        flexDirection: 'row',
-        gap: 10,
-    },
-    propertyTypeButtons: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        marginBottom: 16,
-    },
-    propertyTypeButton: {
-        padding: 10,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 4,
-        marginHorizontal: 5,
-    },
-    selectedButton: {
-        backgroundColor: "#007bff",
-    },
-    propertyTypeButtonText: {
-        fontSize: 16,
-        color: "#000",
-    },
-    selectedButtonText: {
-        color: "#fff",
-    },
-});

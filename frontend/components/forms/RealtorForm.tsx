@@ -7,17 +7,17 @@ import {
     StyleSheet,
     Button,
 } from "react-native";
-import Input from "./input";
+import Input from "../input";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "@/constants/Api";
 import { Errors, Realtor } from "@/types/types";
 
 interface RealtorFormProps {
-    realtor?: Realtor; // Объект риэлтора для редактирования
-    isVisible: boolean; // Состояние видимости модала
-    onClose: () => void; // Функция для закрытия модала
-    onUpdate: () => void; // Функция для обновления риэлторов в родительском компоненте
+    realtor?: Realtor | null;
+    isVisible: boolean;
+    onClose: () => void;
+    onUpdate: () => void;
 }
 
 function RealtorForm({
@@ -44,7 +44,7 @@ function RealtorForm({
 
     useEffect(() => {
         handleRealtorData();
-        setErrors({})
+        setErrors({});
     }, [realtor, isVisible]);
 
     const validateForm = (): boolean => {
@@ -71,7 +71,7 @@ function RealtorForm({
         }
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0; // Возвращает true, если ошибок нет
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = () => {
@@ -189,13 +189,13 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     closeButton: {
-        alignSelf:'center',
+        alignSelf: "center",
         marginTop: 16,
         padding: 10,
         borderRadius: 4,
     },
     closeButtonText: {
-        color:'#ff0000',
+        color: "#ff0000",
         fontSize: 16,
     },
 });

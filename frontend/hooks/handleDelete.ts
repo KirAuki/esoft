@@ -3,18 +3,18 @@ import axios from "axios";
 import { Alert } from "react-native";
 
 export const handleDelete = async (
-    objects: string,
-    objectId: number,
+    entity: string,
+    entityId: number,
     fetch: any,
 ) => {
     try {
         const response = await axios.delete(
-            `${API_BASE_URL}/${objects}/${objectId}/`,
+            `${API_BASE_URL}/${entity}/${entityId}/`,
         );
 
         if (response.status === 204) {
             fetch();
-            Alert.alert("Объект успешно удален");
+            Alert.alert("Запись успешно удалена");
             return;
         }
     } catch (err: any) {

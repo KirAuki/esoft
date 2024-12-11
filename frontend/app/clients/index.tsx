@@ -1,26 +1,34 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
-    FlatList,
     View,
     Text,
     TextInput,
-    StyleSheet,
     Button,
-    Alert,
+    ActivityIndicator,
+    ScrollView,
 } from "react-native";
 import axios from "axios";
 import { API_BASE_URL } from "@/constants/Api";
 import { Client } from "@/types/types";
-import { Link } from "expo-router";
-import ClientForm from "@/components/ClientForm";
+import { Link, useFocusEffect } from "expo-router";
+import ClientForm from "@/components/forms/ClientForm";
 import { handleDelete } from "@/hooks/handleDelete";
+import { baseStyles } from "@/styles/baseStyle";
+import { useForm } from "@/hooks/useForm";
 
 function ClientsList() {
+    const {
+        formVisible,
+        currentItem,
+        handleCreate,
+        handleEdit,
+        handleCloseForm,
+        handleUpdate,
+    } = useForm<Client | null>(null, fetchClients);
+
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [isModalVisible, setModalVisible] = useState(false);
-
     async function fetchClients(searchQuery: string = "") {
         setLoading(true);
         try {
@@ -37,100 +45,81 @@ function ClientsList() {
         }
     }
 
-    useEffect(() => {
-        fetchClients(searchQuery);
-    }, [searchQuery]);
-
+    useFocusEffect(
+        useCallback(() => {
+            fetchClients();
+        }, []),
+    );
     const handleSearchChange = (text: string) => {
         setSearchQuery(text);
-        fetchClients(text);
     };
 
-    const handleClientsUpdate = async () => {
-        await fetchClients();
+    const handleSearchSubmit = () => {
+        fetchClients(searchQuery);
     };
+
+    if (loading) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+    }
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={baseStyles.container}>
             <TextInput
                 placeholder="Поиск по ФИО..."
                 value={searchQuery}
                 onChangeText={handleSearchChange}
-                style={styles.searchInput}
+                onSubmitEditing={handleSearchSubmit}
+                returnKeyType="search"
+                style={baseStyles.searchInput}
             />
-            <FlatList
-                data={clients}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <View style={styles.clientContainer}>
+            <Button title="Создать клиента" onPress={handleCreate} />
+            {clients.length > 0 ? (
+                clients.map((item) => (
+                    <View key={item.id} style={baseStyles.objectsContainer}>
                         <Link
                             href={{
                                 pathname: "/clients/[id]",
                                 params: { id: item.id },
                             }}
                         >
-                            <View>
-                                <Text
-                                    style={styles.clientName}
-                                >{`ФИО: ${item.last_name || ""} ${item.first_name || ""} ${item.patronymic || ""}`}</Text>
+                            <View style={baseStyles.objectInfo}>
+                                <Text>
+                                    {`ФИО: ${item.full_name || "Не указано"}`}
+                                </Text>
                                 <Text>{`Телефон: ${item.phone || "не указан"}  Почта: ${item.email || "не указана"}`}</Text>
                             </View>
                         </Link>
-                        <Button
-                            title="Удалить"
-                            onPress={() =>
-                                handleDelete("clients", item.id, fetchClients)
-                            }
-                            color="red"
-                        />
+                        <View style={baseStyles.objectActionButtons}>
+                            <Button
+                                title="Редактировать"
+                                onPress={() => handleEdit(item)}
+                            />
+                            <Button
+                                title="Удалить"
+                                onPress={() =>
+                                    handleDelete(
+                                        "clients",
+                                        item.id,
+                                        fetchClients,
+                                    )
+                                }
+                                color="red"
+                            />
+                        </View>
                     </View>
-                )}
-                ListEmptyComponent={<Text>Список клиентов пуст.</Text>}
-                refreshing={loading}
-                onRefresh={fetchClients}
-            />
-            <Button
-                title="Создать клиента"
-                onPress={() => setModalVisible(true)}
-            />
+                ))
+            ) : (
+                <Text>Список клиентов пуст.</Text>
+            )}
+
             <ClientForm
-                isVisible={isModalVisible}
-                onClose={() => setModalVisible(false)}
-                onUpdate={handleClientsUpdate}
+                isVisible={formVisible}
+                onClose={handleCloseForm}
+                onUpdate={handleUpdate}
+                client={currentItem}
             />
-        </View>
+        </ScrollView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-    },
-    searchInput: {
-        height: 40,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 4,
-        paddingHorizontal: 8,
-        marginBottom: 16,
-    },
-    clientContainer: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 16,
-        padding: 12,
-        backgroundColor: "#f9f9f9",
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "#ddd",
-    },
-    clientName: {
-        fontSize: 16,
-        fontWeight: "bold",
-        marginBottom: 4,
-    },
-});
 
 export default ClientsList;

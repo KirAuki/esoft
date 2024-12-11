@@ -10,8 +10,17 @@ class Client(models.Model):
     phone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
 
+    @property
+    def full_name(self):
+        components = [
+            self.last_name,
+            self.first_name,
+            self.patronymic
+        ]
+        return " ".join(filter(None, components))
+
     def __str__(self):
-        return f"{self.last_name or ''} {self.first_name or ''}".strip()
+        return self.full_name
 
     def clean(self):
         """
@@ -35,8 +44,17 @@ class Realtor(models.Model):
         ]
     )
 
+    @property
+    def full_name(self):
+        components = [
+            self.last_name,
+            self.first_name,
+            self.patronymic
+        ]
+        return " ".join(filter(None, components))
+
     def __str__(self):
-        return f"{self.last_name} {self.first_name} {self.patronymic}"
+        return self.full_name
 
 
 class PropertyType(models.TextChoices):
@@ -85,7 +103,7 @@ class Property(models.Model):
         components = [
             self.city,
             self.street,
-            self.house_number,
+            f"д.{self.house_number}",
             f"кв. {self.apartment_number}" if self.apartment_number else None
         ]
         return ", ".join(filter(None, components))
@@ -112,11 +130,6 @@ class Offer(models.Model):
     # Метод для проверки, участвует ли предложение в сделке
     def is_in_deal(self):
         return Deal.objects.filter(offer=self).exists()
-
-    def delete(self, *args, **kwargs):
-        if self.is_in_deal():
-            raise ValidationError("Это предложение не может быть удалено, так как является частью сделки.")
-        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"Offer for {self.property.address} by {self.client} with price {self.price}"
@@ -169,7 +182,7 @@ class Need(models.Model):
 
     def __str__(self):
         return f"Need by {self.client} for {self.get_property_type_display()} at {self.address}"
-
+    
     class Meta:
         constraints = [
             models.CheckConstraint(check=models.Q(min_price__gt=0), name='need_min_price_positive'),

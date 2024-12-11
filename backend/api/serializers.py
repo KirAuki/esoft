@@ -4,7 +4,7 @@ from .models import Client, Deal, Need, Offer, Property, Realtor
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = '__all__'
+        fields = ['id', 'last_name', 'first_name', 'patronymic', 'phone', 'email', 'full_name']
 
     def validate(self, data):
         """
@@ -21,7 +21,7 @@ class ClientSerializer(serializers.ModelSerializer):
 class RealtorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Realtor
-        fields = '__all__'
+        fields = ['id', 'last_name', 'first_name', 'patronymic', 'commission_share', 'full_name']
 
     def validate(self, data):
         """
@@ -50,9 +50,9 @@ class PropertySerializer(serializers.ModelSerializer):
 
 
 class OfferSerializer(serializers.ModelSerializer):
-    client = ClientSerializer()
-    realtor = RealtorSerializer()
-    property = PropertySerializer()
+    client = serializers.PrimaryKeyRelatedField(queryset=Client.objects.all())
+    realtor = serializers.PrimaryKeyRelatedField(queryset=Realtor.objects.all())
+    property = serializers.PrimaryKeyRelatedField(queryset=Property.objects.all())
     class Meta:
         model = Offer
         fields = ['id','price','client','realtor','property']
@@ -64,11 +64,51 @@ class OfferSerializer(serializers.ModelSerializer):
         if data['price'] <= 0:
             raise serializers.ValidationError("Цена должна быть положительным числом.")
         return data
+    
+    def to_representation(self, instance):
+        """
+        Переопределяем метод для представления данных.
+        """
+        representation = super().to_representation(instance)
+        # Добавляем вложенные объекты
+        representation['client'] = {
+            "id": instance.client.id,
+            "last_name": instance.client.last_name,
+            "first_name": instance.client.first_name,
+            "patronymic": instance.client.patronymic,
+            "phone": instance.client.phone,
+            "email": instance.client.email,
+            "full_name": instance.client.full_name,
+        }
+        representation['realtor'] = {
+            "id": instance.realtor.id,
+            "last_name": instance.realtor.last_name,
+            "first_name": instance.realtor.first_name,
+            "patronymic": instance.realtor.patronymic,
+            "commission_share": instance.realtor.commission_share,
+            "full_name": instance.realtor.full_name,
+        }
+        representation['property'] = {
+            "id": instance.property.id,
+            "property_type": instance.property.property_type,
+            "city": instance.property.city,
+            "street": instance.property.street,
+            "house_number": instance.property.house_number,
+            "apartment_number": instance.property.apartment_number,
+            "latitude": instance.property.latitude,
+            "longitude": instance.property.longitude,
+            "area": instance.property.area,
+            "floor": instance.property.floor,
+            "rooms": instance.property.rooms,
+            "floors": instance.property.floors,
+            "address": instance.property.address,
+        }
+        return representation
 
 
 class NeedSerializer(serializers.ModelSerializer):
-    client = ClientSerializer()
-    realtor = RealtorSerializer()
+    client = serializers.PrimaryKeyRelatedField(queryset=Client.objects.all())
+    realtor = serializers.PrimaryKeyRelatedField(queryset=Realtor.objects.all())
     class Meta:
         model = Need
         fields = ['id','property_type','address','min_price','max_price','min_area','max_area','min_rooms','max_rooms',
@@ -80,10 +120,33 @@ class NeedSerializer(serializers.ModelSerializer):
         """
         if data.get('min_price') and data.get('max_price') and data['min_price'] > data['max_price']:
             raise serializers.ValidationError("Минимальная цена не может быть выше максимальной.")
-        if 'min_area' in data and 'max_area' in data and data['min_area'] > data['max_area']:
-            raise serializers.ValidationError("Максимальная цена не может быть выше минимальной.")
+        
         return data
-
+    
+    def to_representation(self, instance):
+        """
+        Переопределяем метод для представления данных.
+        """
+        representation = super().to_representation(instance)
+        # Добавляем вложенные объекты
+        representation['client'] = {
+            "id": instance.client.id,
+            "last_name": instance.client.last_name,
+            "first_name": instance.client.first_name,
+            "patronymic": instance.client.patronymic,
+            "phone": instance.client.phone,
+            "email": instance.client.email,
+            "full_name": instance.client.full_name,
+        }
+        representation['realtor'] = {
+            "id": instance.realtor.id,
+            "last_name": instance.realtor.last_name,
+            "first_name": instance.realtor.first_name,
+            "patronymic": instance.realtor.patronymic,
+            "commission_share": instance.realtor.commission_share,
+            "full_name": instance.realtor.full_name,
+        }
+        return representation
 
 class DealSerializer(serializers.ModelSerializer):
     need = NeedSerializer()
