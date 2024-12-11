@@ -1,34 +1,58 @@
 from django.contrib import admin
-from .models import Client, Deal, Need, Offer,Property, Realtor
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
+from .models import Client, Deal, Need, Offer, Property, Realtor
 
+# Определение ресурсов для импорта/экспорта
+class ClientResource(resources.ModelResource):
+    class Meta:
+        model = Client
+
+class RealtorResource(resources.ModelResource):
+    class Meta:
+        model = Realtor
+
+class PropertyResource(resources.ModelResource):
+    class Meta:
+        model = Property
+
+class OfferResource(resources.ModelResource):
+    class Meta:
+        model = Offer
+
+class NeedResource(resources.ModelResource):
+    class Meta:
+        model = Need
+
+class DealResource(resources.ModelResource):
+    class Meta:
+        model = Deal
+
+# Обновление админ-классов для импорта/экспорта
 @admin.register(Client)
-class ClientAdmin(admin.ModelAdmin):
+class ClientAdmin(ImportExportModelAdmin):
+    resource_class = ClientResource
     list_display = ('last_name', 'first_name', 'patronymic', 'phone', 'email')
     search_fields = ('last_name', 'first_name', 'patronymic', 'phone', 'email')
     list_filter = ('last_name', 'first_name')
     ordering = ('last_name',)
 
 @admin.register(Realtor)
-class RealtorAdmin(admin.ModelAdmin):
+class RealtorAdmin(ImportExportModelAdmin):
+    resource_class = RealtorResource
     list_display = ('last_name', 'first_name', 'patronymic', 'commission_share')
     search_fields = ('last_name', 'first_name', 'patronymic')
     list_filter = ('commission_share',)
     ordering = ('last_name',)
 
 @admin.register(Property)
-class PropertyAdmin(admin.ModelAdmin):
-    # Поля, которые будут отображаться в списке объектов недвижимости
+class PropertyAdmin(ImportExportModelAdmin):
+    resource_class = PropertyResource
     list_display = (
-        'id','property_type', 'city','street','house_number','apartment_number','latitude','longitude','area','floor','rooms','floors'
+        'id', 'property_type', 'city', 'street', 'house_number', 'apartment_number', 'latitude', 'longitude', 'area', 'floor', 'rooms', 'floors'
     )
-    
-    # Фильтрация объектов недвижимости в админке
     list_filter = ('property_type', 'city', 'rooms')
-
-    # Поля, которые можно будет искать
     search_fields = ('city', 'street', 'house_number', 'apartment_number')
-
-    # Группировка полей для редактирования в форме
     fieldsets = (
         ('Общая информация', {
             'fields': ('property_type', 'city', 'street', 'house_number', 'apartment_number')
@@ -42,24 +66,22 @@ class PropertyAdmin(admin.ModelAdmin):
     )
 
 @admin.register(Offer)
-class OfferAdmin(admin.ModelAdmin):
+class OfferAdmin(ImportExportModelAdmin):
+    resource_class = OfferResource
     list_display = ('id', 'client', 'realtor', 'property', 'price')
     search_fields = ('client__first_name', 'client__last_name', 'realtor__first_name', 'realtor__last_name')
     list_filter = ('property__property_type',)
 
-
 @admin.register(Need)
-class NeedAdmin(admin.ModelAdmin):
+class NeedAdmin(ImportExportModelAdmin):
+    resource_class = NeedResource
     list_display = ('id', 'client', 'realtor', 'property_type', 'address', 'min_price', 'max_price')
     search_fields = ('client__first_name', 'client__last_name', 'realtor__first_name', 'realtor__last_name', 'address')
     list_filter = ('property_type',)
 
-
 @admin.register(Deal)
-class DealAdmin(admin.ModelAdmin):
+class DealAdmin(ImportExportModelAdmin):
+    resource_class = DealResource
     list_display = ('id', 'need', 'offer')
     search_fields = ('need__client__first_name', 'need__client__last_name', 'offer__client__first_name', 'offer__client__last_name')
     list_filter = ('need__property_type',)
-
-
-
