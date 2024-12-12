@@ -46,13 +46,17 @@ export interface Need {
     client: Client;
     realtor: Realtor;
     property_type: string;
+    city?: string;
+    street?: string;
+    house_number?: string;
+    apartment_number?: string;
     address: string;
     min_price: number;
     max_price: number;
-
-    // Поля для квартир
     min_area?: number | null;
     max_area?: number | null;
+
+    // Поля для квартир
     min_rooms?: number | null;
     max_rooms?: number | null;
     min_floor?: number | null;
@@ -61,10 +65,11 @@ export interface Need {
     // Поля для домов
     min_floors?: number | null;
     max_floors?: number | null;
-
-    // Поля для земли
-    min_land_area?: number | null;
-    max_land_area?: number | null;
+}
+export interface Deal {
+    id: number;
+    need: Need;
+    offer: Offer;
 }
 
 export interface Errors {

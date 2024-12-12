@@ -12,7 +12,7 @@ export default function Index() {
             }}
         >
             <Link href={"/properties"}>
-                <Text>properties.</Text>
+                <Text>properties</Text>
             </Link>
             <Link href={"/realtors"}>
                 <Text>realtors</Text>
@@ -25,6 +25,9 @@ export default function Index() {
             </Link>
             <Link href={"/needs"}>
                 <Text>needs</Text>
+            </Link>
+            <Link href={"/deals"}>
+                <Text>deals</Text>
             </Link>
         </View>
     );

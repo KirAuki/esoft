@@ -13,10 +13,10 @@ import { Client } from "@/types/types";
 import { Link, useFocusEffect } from "expo-router";
 import ClientForm from "@/components/forms/ClientForm";
 import { handleDelete } from "@/hooks/handleDelete";
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
 
-function ClientsList() {
+function ClientsPage() {
     const {
         formVisible,
         currentItem,
@@ -63,63 +63,72 @@ function ClientsList() {
     }
 
     return (
-        <ScrollView contentContainerStyle={baseStyles.container}>
-            <TextInput
-                placeholder="Поиск по ФИО..."
-                value={searchQuery}
-                onChangeText={handleSearchChange}
-                onSubmitEditing={handleSearchSubmit}
-                returnKeyType="search"
-                style={baseStyles.searchInput}
-            />
-            <Button title="Создать клиента" onPress={handleCreate} />
-            {clients.length > 0 ? (
-                clients.map((item) => (
-                    <View key={item.id} style={baseStyles.objectsContainer}>
-                        <Link
-                            href={{
-                                pathname: "/clients/[id]",
-                                params: { id: item.id },
-                            }}
+        <View style={baseStyles.container}>
+            <ScrollView
+                contentContainerStyle={baseStyles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+            >
+                <TextInput
+                    placeholder="Поиск по ФИО..."
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    onSubmitEditing={handleSearchSubmit}
+                    returnKeyType="search"
+                    style={baseStyles.searchInput}
+                />
+                <Button title="Создать клиента" onPress={handleCreate} />
+                {clients.length > 0 ? (
+                    clients.map((client) => (
+                        <View
+                            key={client.id}
+                            style={baseStyles.objectsContainer}
                         >
-                            <View style={baseStyles.objectInfo}>
-                                <Text>
-                                    {`ФИО: ${item.full_name || "Не указано"}`}
-                                </Text>
-                                <Text>{`Телефон: ${item.phone || "не указан"}  Почта: ${item.email || "не указана"}`}</Text>
+                            <Link
+                                href={{
+                                    pathname: "/clients/[id]",
+                                    params: { id: client.id },
+                                }}
+                            >
+                                <View style={baseStyles.objectInfo}>
+                                    <Text>
+                                        {`ФИО: ${client.full_name || "Не указано"}`}
+                                    </Text>
+                                    <Text>{`Телефон: ${client.phone || "не указан"}  Почта: ${client.email || "не указана"}`}</Text>
+                                </View>
+                            </Link>
+                            <View style={baseStyles.objectActionButtons}>
+                                <Button
+                                    title="Редактировать"
+                                    onPress={() => handleEdit(client)}
+                                />
+                                <Button
+                                    title="Удалить"
+                                    onPress={() =>
+                                        handleDelete(
+                                            "clients",
+                                            client.id,
+                                            fetchClients,
+                                        )
+                                    }
+                                    color="red"
+                                />
                             </View>
-                        </Link>
-                        <View style={baseStyles.objectActionButtons}>
-                            <Button
-                                title="Редактировать"
-                                onPress={() => handleEdit(item)}
-                            />
-                            <Button
-                                title="Удалить"
-                                onPress={() =>
-                                    handleDelete(
-                                        "clients",
-                                        item.id,
-                                        fetchClients,
-                                    )
-                                }
-                                color="red"
-                            />
                         </View>
-                    </View>
-                ))
-            ) : (
-                <Text>Список клиентов пуст.</Text>
-            )}
+                    ))
+                ) : (
+                    <Text>Список клиентов пуст.</Text>
+                )}
 
-            <ClientForm
-                isVisible={formVisible}
-                onClose={handleCloseForm}
-                onUpdate={handleUpdate}
-                client={currentItem}
-            />
-        </ScrollView>
+                <ClientForm
+                    isVisible={formVisible}
+                    onClose={handleCloseForm}
+                    onUpdate={handleUpdate}
+                    client={currentItem}
+                />
+            </ScrollView>
+        </View>
     );
 }
 
-export default ClientsList;
+export default ClientsPage;

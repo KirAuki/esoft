@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import {
-    FlatList,
     View,
     Text,
     TextInput,
@@ -14,10 +13,10 @@ import { Realtor } from "@/types/types";
 import { Link, useFocusEffect } from "expo-router";
 import RealtorForm from "@/components/forms/RealtorForm";
 import { handleDelete } from "@/hooks/handleDelete";
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
 
-function RealtorsList() {
+function RealtorsPage() {
     const {
         formVisible,
         currentItem,
@@ -66,62 +65,71 @@ function RealtorsList() {
     }
 
     return (
-        <ScrollView contentContainerStyle={baseStyles.container}>
-            <TextInput
-                placeholder="Поиск по ФИО..."
-                value={searchQuery}
-                onChangeText={handleSearchChange}
-                onSubmitEditing={handleSearchSubmit}
-                returnKeyType="search"
-                style={baseStyles.searchInput}
-            />
-            <Button title="Создать риелтора" onPress={handleCreate} />
-            {realtors.length > 0 ? (
-                realtors.map((item) => (
-                    <View key={item.id} style={baseStyles.objectsContainer}>
-                        <Link
-                            href={{
-                                pathname: "/realtors/[id]",
-                                params: { id: item.id },
-                            }}
-                            style={baseStyles.objectLink}
+        <View style={baseStyles.container}>
+            <ScrollView
+                contentContainerStyle={baseStyles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+            >
+                <TextInput
+                    placeholder="Поиск по ФИО..."
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    onSubmitEditing={handleSearchSubmit}
+                    returnKeyType="search"
+                    style={baseStyles.searchInput}
+                />
+                <Button title="Создать риелтора" onPress={handleCreate} />
+                {realtors.length > 0 ? (
+                    realtors.map((realtor) => (
+                        <View
+                            key={realtor.id}
+                            style={baseStyles.objectsContainer}
                         >
-                            <View style={baseStyles.objectInfo}>
-                                <Text>{`${item.full_name}`}</Text>
-                                <Text>{`Коммисия: ${item.commission_share || "-"}`}</Text>
+                            <Link
+                                href={{
+                                    pathname: "/realtors/[id]",
+                                    params: { id: realtor.id },
+                                }}
+                                style={baseStyles.objectLink}
+                            >
+                                <View style={baseStyles.objectInfo}>
+                                    <Text>{`${realtor.full_name}`}</Text>
+                                    <Text>{`Коммисия: ${realtor.commission_share || "-"}`}</Text>
+                                </View>
+                            </Link>
+                            <View style={baseStyles.objectActionButtons}>
+                                <Button
+                                    title="Редактировать"
+                                    onPress={() => handleEdit(realtor)}
+                                />
+                                <Button
+                                    title="Удалить"
+                                    onPress={() =>
+                                        handleDelete(
+                                            "realtors",
+                                            realtor.id,
+                                            fetchRealtors,
+                                        )
+                                    }
+                                    color="red"
+                                />
                             </View>
-                        </Link>
-                        <View style={baseStyles.objectActionButtons}>
-                            <Button
-                                title="Редактировать"
-                                onPress={() => handleEdit(item)}
-                            />
-                            <Button
-                                title="Удалить"
-                                onPress={() =>
-                                    handleDelete(
-                                        "realtors",
-                                        item.id,
-                                        fetchRealtors,
-                                    )
-                                }
-                                color="red"
-                            />
                         </View>
-                    </View>
-                ))
-            ) : (
-                <Text>Список риелторов пуст.</Text>
-            )}
+                    ))
+                ) : (
+                    <Text>Список риелторов пуст.</Text>
+                )}
 
-            <RealtorForm
-                realtor={currentItem}
-                isVisible={formVisible}
-                onClose={handleCloseForm}
-                onUpdate={handleSearchSubmit}
-            />
-        </ScrollView>
+                <RealtorForm
+                    realtor={currentItem}
+                    isVisible={formVisible}
+                    onClose={handleCloseForm}
+                    onUpdate={handleSearchSubmit}
+                />
+            </ScrollView>
+        </View>
     );
 }
 
-export default RealtorsList;
+export default RealtorsPage;

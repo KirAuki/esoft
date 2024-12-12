@@ -111,8 +111,8 @@ class NeedSerializer(serializers.ModelSerializer):
     realtor = serializers.PrimaryKeyRelatedField(queryset=Realtor.objects.all())
     class Meta:
         model = Need
-        fields = ['id','property_type','address','min_price','max_price','min_area','max_area','min_rooms','max_rooms',
-                  'min_floor','max_floor','min_floors','max_floors','min_land_area','max_land_area', 'client','realtor']
+        fields = ['id','property_type','address','city', 'street', 'house_number', 'apartment_number','min_price','max_price','min_area','max_area','min_rooms','max_rooms',
+                  'min_floor','max_floor','min_floors','max_floors','client','realtor']
 
     def validate(self, data):
         """
@@ -149,8 +149,8 @@ class NeedSerializer(serializers.ModelSerializer):
         return representation
 
 class DealSerializer(serializers.ModelSerializer):
-    need = NeedSerializer()
-    offer = OfferSerializer()
+    need= serializers.PrimaryKeyRelatedField(queryset=Need.objects.all())
+    offer = serializers.PrimaryKeyRelatedField(queryset=Offer.objects.all())
     class Meta:
         model = Deal
         fields = ['id', 'need' , 'offer']
@@ -164,3 +164,78 @@ class DealSerializer(serializers.ModelSerializer):
         if data['offer'].is_in_deal():
             raise serializers.ValidationError("Выбранное предложение уже является частью сделки.")
         return data
+    
+    def to_representation(self, instance):
+        """
+        Переопределяем метод для представления данных.
+        """
+        representation = super().to_representation(instance)
+        representation['need'] = {
+            "id": instance.need.id,
+            "property_type": instance.need.property_type,
+            "address": instance.need.address,
+            "min_price": instance.need.min_price,
+            "max_price": instance.need.max_price,
+            "min_area": instance.need.min_area,
+            "max_area": instance.need.max_area,
+            "min_rooms": instance.need.min_rooms,
+            "max_rooms": instance.need.max_rooms,
+            "min_floor": instance.need.min_floor,
+            "max_floor": instance.need.max_floor,
+            "min_floors": instance.need.min_floors,
+            "max_floors": instance.need.max_floors,
+            "client": {
+                "id": instance.need.client.id,
+                "last_name": instance.need.client.last_name,
+                "first_name": instance.need.client.first_name,
+                "patronymic": instance.need.client.patronymic,
+                "phone": instance.need.client.phone,
+                "email": instance.need.client.email,
+                "full_name": instance.need.client.full_name,
+            },
+            "realtor": {
+                "id": instance.need.realtor.id,
+                "last_name": instance.need.realtor.last_name,
+                "first_name": instance.need.realtor.first_name,
+                "patronymic": instance.need.realtor.patronymic,
+                "commission_share": instance.need.realtor.commission_share,
+                "full_name": instance.need.realtor.full_name,
+            },
+        }
+        representation['offer'] = {
+            "id": instance.offer.id,
+            "price": instance.offer.price,
+            "client": {
+                "id": instance.offer.client.id,
+                "last_name": instance.offer.client.last_name,
+                "first_name": instance.offer.client.first_name,
+                "patronymic": instance.offer.client.patronymic,
+                "phone": instance.offer.client.phone,
+                "email": instance.offer.client.email,
+                "full_name": instance.offer.client.full_name,
+            },
+            "realtor": {
+                "id": instance.offer.realtor.id,
+                "last_name": instance.offer.realtor.last_name,
+                "first_name": instance.offer.realtor.first_name,
+                "patronymic": instance.offer.realtor.patronymic,
+                "commission_share": instance.offer.realtor.commission_share,
+                "full_name": instance.offer.realtor.full_name,
+            },
+            "property": {
+                "id": instance.offer.property.id,
+                "property_type": instance.offer.property.property_type,
+                "city": instance.offer.property.city,
+                "street": instance.offer.property.street,
+                "house_number": instance.offer.property.house_number,
+                "apartment_number": instance.offer.property.apartment_number,
+                "latitude": instance.offer.property.latitude,
+                "longitude": instance.offer.property.longitude,
+                "area": instance.offer.property.area,
+                "floor": instance.offer.property.floor,
+                "rooms": instance.offer.property.rooms,
+                "floors": instance.offer.property.floors,
+                "address": instance.offer.property.address,
+            },
+        }
+        return representation

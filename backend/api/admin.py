@@ -32,7 +32,7 @@ class DealResource(resources.ModelResource):
 @admin.register(Client)
 class ClientAdmin(ImportExportModelAdmin):
     resource_class = ClientResource
-    list_display = ('last_name', 'first_name', 'patronymic', 'phone', 'email')
+    list_display = ('id','last_name', 'first_name', 'patronymic', 'phone', 'email')
     search_fields = ('last_name', 'first_name', 'patronymic', 'phone', 'email')
     list_filter = ('last_name', 'first_name')
     ordering = ('last_name',)
@@ -40,7 +40,7 @@ class ClientAdmin(ImportExportModelAdmin):
 @admin.register(Realtor)
 class RealtorAdmin(ImportExportModelAdmin):
     resource_class = RealtorResource
-    list_display = ('last_name', 'first_name', 'patronymic', 'commission_share')
+    list_display = ('id','last_name', 'first_name', 'patronymic', 'commission_share')
     search_fields = ('last_name', 'first_name', 'patronymic')
     list_filter = ('commission_share',)
     ordering = ('last_name',)
@@ -76,7 +76,7 @@ class OfferAdmin(ImportExportModelAdmin):
 class NeedAdmin(ImportExportModelAdmin):
     resource_class = NeedResource
     list_display = ('id', 'client', 'realtor', 'property_type', 'address', 'min_price', 'max_price')
-    search_fields = ('client__first_name', 'client__last_name', 'realtor__first_name', 'realtor__last_name', 'address')
+    search_fields = ('client__first_name', 'client__last_name', 'realtor__first_name', 'realtor__last_name', 'address', 'city', 'street', 'house_number', 'apartment_number')
     list_filter = ('property_type',)
 
 @admin.register(Deal)

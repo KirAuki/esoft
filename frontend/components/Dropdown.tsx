@@ -55,8 +55,8 @@ function Dropdown({
 const styles = StyleSheet.create({
     picker: {
         marginBottom: 10,
-        minWidth: '90%',
-        maxHeight: 200
+        minWidth: "90%",
+        maxHeight: 200,
     },
     errorText: {
         color: "red",

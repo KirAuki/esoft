@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/constants/Api";
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { Need, Offer } from "@/types/types";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -67,7 +67,7 @@ function RelatedList({ clientId, realtorId }: Props) {
                             showAlt && baseStyles.selectedButtonText,
                         ]}
                     >
-                        Offers
+                        Предложения
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -83,7 +83,7 @@ function RelatedList({ clientId, realtorId }: Props) {
                             !showAlt && baseStyles.selectedButtonText,
                         ]}
                     >
-                        Needs
+                        Потребности
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -119,23 +119,19 @@ function RelatedList({ clientId, realtorId }: Props) {
                                     <Text>{`Клиент: ${item.client.full_name || item.client.email || item.client.phone || "Не указано"}`}</Text>
                                     <Text>{`Риэлтор: ${item.realtor.full_name}`}</Text>
                                     <Text>{`Тип объекта: ${item.property_type}`}</Text>
-                                    <Text>{`Адрес: ${item.address}`}</Text>
+                                    <Text>{`Адрес: ${item.address || "-"}`}</Text>
                                     <Text>{`Мин. цена: ${item.min_price}, Макс. цена: ${item.max_price}`}</Text>
+                                    <Text>{`Мин. площадь: ${item.min_area || "-"}, Макс. площадь: ${item.max_area || "-"}`}</Text>
                                     {item.property_type === "Квартира" && (
                                         <>
-                                            <Text>{`Мин. площадь: ${item.min_area}, Макс. площадь: ${item.max_area}`}</Text>
-                                            <Text>{`Комнаты: от ${item.min_rooms || "не указано"} до ${item.max_rooms || "не указано"}`}</Text>
-                                            <Text>{`Этаж: от ${item.min_floor || "не указано"} до ${item.max_floor || "не указано"}`}</Text>
+                                            <Text>{`Комнаты: от ${item.min_rooms || "-"} до ${item.max_rooms || "-"}`}</Text>
+                                            <Text>{`Этаж: от ${item.min_floor || "-"} до ${item.max_floor || "-"}`}</Text>
                                         </>
                                     )}
                                     {item.property_type === "Дом" && (
                                         <>
-                                            <Text>{`Мин. площадь: ${item.min_area}, Макс. площадь: ${item.max_area}`}</Text>
-                                            <Text>{`Этажность: от ${item.min_floors || "не указано"} до ${item.max_floors || "не указано"}`}</Text>
+                                            <Text>{`Этажность: от ${item.min_floors || "-"} до ${item.max_floors || "-"}`}</Text>
                                         </>
-                                    )}
-                                    {item.property_type === "Земля" && (
-                                        <Text>{`Площадь земли: от ${item.min_land_area || "не указано"} до ${item.max_land_area || "не указано"}`}</Text>
                                     )}
                                 </View>
                             </View>

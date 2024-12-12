@@ -5,16 +5,16 @@ import {
     Modal,
     View,
     Text,
-    TextInput,
     Button,
     Alert,
-    TouchableOpacity,
-    StyleSheet,
     ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { Property } from "@/types/types";
 import Input from "../input";
 import Dropdown from "../Dropdown";
+import { formStyles } from "@/styles/formStyles";
 
 type PropertyFormProps = {
     property?: Property | null;
@@ -29,24 +29,32 @@ function PropertyForm({
     onClose,
     onUpdate,
 }: PropertyFormProps) {
+    const [propertyType, setPropertyType] = useState<string>("");
     const [city, setCity] = useState<string>("");
     const [street, setStreet] = useState<string>("");
     const [houseNumber, setHouseNumber] = useState<string>("");
     const [apartmentNumber, setApartmentNumber] = useState<string>("");
     const [latitude, setLatitude] = useState<string>("");
     const [longitude, setLongitude] = useState<string>("");
-    const [propertyType, setPropertyType] = useState<string>("");
+    const [area, setArea] = useState<string>("");
+    const [floor, setFloor] = useState<string>("");
+    const [rooms, setRooms] = useState<string>("");
+    const [floors, setFloors] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     const handlePropertyData = () => {
+        setPropertyType(property?.property_type || "");
         setCity(property?.city || "");
         setStreet(property?.street || "");
         setHouseNumber(property?.house_number || "");
         setApartmentNumber(property?.apartment_number || "");
         setLatitude(property?.latitude?.toString() || "");
         setLongitude(property?.longitude?.toString() || "");
-        setPropertyType(property?.property_type || "");
+        setArea(property?.area?.toString() || "");
+        setFloor(property?.floor?.toString() || "");
+        setRooms(property?.rooms?.toString() || "");
+        setFloors(property?.floors?.toString() || "");
     };
 
     useEffect(() => {
@@ -55,6 +63,10 @@ function PropertyForm({
 
     const validateForm = () => {
         const newErrors: { [key: string]: string } = {};
+
+        if (!propertyType.trim()) {
+            newErrors.property_type = "Тип недвижимости обязателен.";
+        }
 
         if (
             latitude &&
@@ -74,25 +86,24 @@ function PropertyForm({
             newErrors.longitude = "Долгота должна быть числом от -180 до +180.";
         }
 
-        if (propertyType && !propertyType.trim()) {
-            newErrors.property_type = "Тип недвижимости обязателен.";
-        }
-
         setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = () => {
-        validateForm();
-
-        if (Object.keys(errors).length === 0) {
+        if (validateForm()) {
             const propertyData = {
+                property_type: propertyType,
                 city,
                 street,
-                house_number: houseNumber,
-                apartment_number: apartmentNumber,
+                house_number: Number(houseNumber),
+                apartment_number: Number(apartmentNumber),
                 latitude: latitude ? Number(latitude) : undefined,
                 longitude: longitude ? Number(longitude) : undefined,
-                property_type: propertyType,
+                area: area ? Number(area) : undefined,
+                floor: floor ? Number(floor) : undefined,
+                rooms: rooms ? Number(rooms) : undefined,
+                floors: floors ? Number(floors) : undefined,
             };
 
             const apiCall = property
@@ -133,119 +144,178 @@ function PropertyForm({
             animationType="slide"
             onRequestClose={onClose}
         >
-            <ScrollView contentContainerStyle={styles.container}>
-                <Text style={styles.title}>
-                    {property
-                        ? "Редактирование недвижимости"
-                        : "Создание недвижимости"}
-                </Text>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+                <ScrollView
+                    contentContainerStyle={formStyles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
+                    <View style={formStyles.container}>
+                        <Text style={formStyles.title}>
+                            {property
+                                ? "Редактирование недвижимости"
+                                : "Создание недвижимости"}
+                        </Text>
 
-                <Input label="Город" value={city} onChange={setCity} />
-                {errors.city && (
-                    <Text style={styles.errorText}>{errors.city}</Text>
-                )}
+                        <Dropdown
+                            label="Тип недвижимости"
+                            selectedValue={propertyType}
+                            onValueChange={(value) =>
+                                setPropertyType(String(value))
+                            }
+                            options={[
+                                { label: "Квартира", value: "Квартира" },
+                                { label: "Дом", value: "Дом" },
+                                { label: "Земля", value: "Земля" },
+                            ]}
+                        />
+                        {errors.property_type && (
+                            <Text style={formStyles.errorText}>
+                                {errors.property_type}
+                            </Text>
+                        )}
 
-                <Input label="Улица" value={street} onChange={setStreet} />
-                {errors.street && (
-                    <Text style={styles.errorText}>{errors.street}</Text>
-                )}
+                        <Input label="Город" value={city} onChange={setCity} />
+                        {errors.city && (
+                            <Text style={formStyles.errorText}>
+                                {errors.city}
+                            </Text>
+                        )}
 
-                <Input
-                    label="Номер дома"
-                    value={houseNumber}
-                    onChange={setHouseNumber}
-                    keyboardType="numeric"
-                />
-                {errors.houseNumber && (
-                    <Text style={styles.errorText}>{errors.houseNumber}</Text>
-                )}
+                        <Input
+                            label="Улица"
+                            value={street}
+                            onChange={setStreet}
+                        />
+                        {errors.street && (
+                            <Text style={formStyles.errorText}>
+                                {errors.street}
+                            </Text>
+                        )}
 
-                <Input
-                    label="Номер квартиры"
-                    value={apartmentNumber}
-                    onChange={setApartmentNumber}
-                    keyboardType="numeric"
-                />
-                {errors.apartmentNumber && (
-                    <Text style={styles.errorText}>
-                        {errors.apartmentNumber}
-                    </Text>
-                )}
+                        <Input
+                            label="Номер дома"
+                            value={houseNumber}
+                            onChange={setHouseNumber}
+                            keyboardType="numeric"
+                        />
+                        {errors.houseNumber && (
+                            <Text style={formStyles.errorText}>
+                                {errors.houseNumber}
+                            </Text>
+                        )}
 
-                <Input
-                    label="Широта"
-                    value={latitude}
-                    onChange={setLatitude}
-                    keyboardType="numeric"
-                />
-                {errors.latitude && (
-                    <Text style={styles.errorText}>{errors.latitude}</Text>
-                )}
+                        <Input
+                            label="Номер квартиры"
+                            value={apartmentNumber}
+                            onChange={setApartmentNumber}
+                            keyboardType="numeric"
+                        />
+                        {errors.apartmentNumber && (
+                            <Text style={formStyles.errorText}>
+                                {errors.apartmentNumber}
+                            </Text>
+                        )}
 
-                <Input
-                    label="Долгота"
-                    value={longitude}
-                    onChange={setLongitude}
-                    keyboardType="numeric"
-                />
-                {errors.longitude && (
-                    <Text style={styles.errorText}>{errors.longitude}</Text>
-                )}
+                        <Input
+                            label="Широта"
+                            value={latitude}
+                            onChange={setLatitude}
+                            keyboardType="numeric"
+                        />
+                        {errors.latitude && (
+                            <Text style={formStyles.errorText}>
+                                {errors.latitude}
+                            </Text>
+                        )}
 
-                <Dropdown
-                    label="Тип недвижимости"
-                    selectedValue={propertyType}
-                    onValueChange={(value) => setPropertyType(String(value))}
-                    options={[
-                        { label: "Квартира", value: "Квартира" },
-                        { label: "Дом", value: "Дом" },
-                        { label: "Земля", value: "Земля" },
-                    ]}
-                />
-                {errors.property_type && (
-                    <Text style={styles.errorText}>{errors.property_type}</Text>
-                )}
+                        <Input
+                            label="Долгота"
+                            value={longitude}
+                            onChange={setLongitude}
+                            keyboardType="numeric"
+                        />
+                        {errors.longitude && (
+                            <Text style={formStyles.errorText}>
+                                {errors.longitude}
+                            </Text>
+                        )}
 
-                <Button
-                    title={property ? "Сохранить" : "Создать"}
-                    onPress={handleSubmit}
-                    disabled={loading}
-                />
+                        <Input
+                            label="Площадь"
+                            value={area}
+                            onChange={setArea}
+                            keyboardType="numeric"
+                        />
+                        {errors.area && (
+                            <Text style={formStyles.errorText}>
+                                {errors.area}
+                            </Text>
+                        )}
 
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>Закрыть</Text>
-                </TouchableOpacity>
-            </ScrollView>
+                        {propertyType === "Квартира" && (
+                            <Input
+                                label="Этаж"
+                                value={floor}
+                                onChange={setFloor}
+                                keyboardType="numeric"
+                            />
+                        )}
+                        {errors.floor && (
+                            <Text style={formStyles.errorText}>
+                                {errors.floor}
+                            </Text>
+                        )}
+
+                        {(propertyType === "Квартира" ||
+                            propertyType === "Дом") && (
+                            <Input
+                                label="Количество комнат"
+                                value={rooms}
+                                onChange={setRooms}
+                                keyboardType="numeric"
+                            />
+                        )}
+                        {errors.rooms && (
+                            <Text style={formStyles.errorText}>
+                                {errors.rooms}
+                            </Text>
+                        )}
+
+                        {propertyType === "Дом" && (
+                            <Input
+                                label="Этажность дома"
+                                value={floors}
+                                onChange={setFloors}
+                                keyboardType="numeric"
+                            />
+                        )}
+                        {errors.floors && (
+                            <Text style={formStyles.errorText}>
+                                {errors.floors}
+                            </Text>
+                        )}
+
+                        <View style={formStyles.actionButtons}>
+                            <Button
+                                title={property ? "Сохранить" : "Создать"}
+                                onPress={handleSubmit}
+                                disabled={loading}
+                            />
+                            <Button
+                                title="Закрыть"
+                                onPress={onClose}
+                                color="red"
+                            />
+                        </View>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 16,
-    },
-    errorText: {
-        color: "red",
-        fontSize: 12,
-        marginBottom: 8,
-    },
-    closeButton: {
-        marginTop: 16,
-        padding: 10,
-        borderRadius: 4,
-    },
-    closeButtonText: {
-        color: "#ff0000",
-        fontSize: 16,
-    },
-});
 
 export default PropertyForm;

@@ -12,10 +12,10 @@ import {
     ScrollView,
 } from "react-native";
 
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
 
-function NeedsList() {
+function NeedsPage() {
     const {
         formVisible,
         currentItem,
@@ -49,60 +49,66 @@ function NeedsList() {
     }
 
     return (
-        <ScrollView contentContainerStyle={baseStyles.container}>
-            <Button title="Создать потребность" onPress={handleCreate} />
-            {needs.length > 0 ? (
-                needs.map((item) => (
-                    <View key={item.id} style={baseStyles.objectsContainer}>
-                        <View style={baseStyles.objectInfo}>
-                            <Text>{`Клиент: ${item.client.full_name || item.client.email || item.client.phone || "Не указано"}`}</Text>
-                            <Text>{`Риэлтор: ${item.realtor.full_name}`}</Text>
-                            <Text>{`Тип объекта: ${item.property_type}`}</Text>
-                            <Text>{`Адрес: ${item.address}`}</Text>
-                            <Text>{`Мин. цена: ${item.min_price}, Макс. цена: ${item.max_price}`}</Text>
-                            {item.property_type === "Квартира" && (
-                                <>
-                                    <Text>{`Мин. площадь: ${item.min_area}, Макс. площадь: ${item.max_area}`}</Text>
-                                    <Text>{`Комнаты: от ${item.min_rooms || "не указано"} до ${item.max_rooms || "не указано"}`}</Text>
-                                    <Text>{`Этаж: от ${item.min_floor || "не указано"} до ${item.max_floor || "не указано"}`}</Text>
-                                </>
-                            )}
-                            {item.property_type === "Дом" && (
-                                <>
-                                    <Text>{`Мин. площадь: ${item.min_area}, Макс. площадь: ${item.max_area}`}</Text>
-                                    <Text>{`Этажность: от ${item.min_floors || "не указано"} до ${item.max_floors || "не указано"}`}</Text>
-                                </>
-                            )}
-                            {item.property_type === "Земля" && (
-                                <Text>{`Площадь земли: от ${item.min_land_area || "не указано"} до ${item.max_land_area || "не указано"}`}</Text>
-                            )}
+        <View style={baseStyles.container}>
+            <ScrollView
+                contentContainerStyle={baseStyles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+            >
+                <Button title="Создать потребность" onPress={handleCreate} />
+                {needs.length > 0 ? (
+                    needs.map((need) => (
+                        <View key={need.id} style={baseStyles.objectsContainer}>
+                            <View style={baseStyles.objectInfo}>
+                                <Text>{`Клиент: ${need.client.full_name || need.client.email || need.client.phone || "Не указано"}`}</Text>
+                                <Text>{`Риэлтор: ${need.realtor.full_name}`}</Text>
+                                <Text>{`Тип объекта: ${need.property_type}`}</Text>
+                                <Text>{`Адрес: ${need.address || "-"}`}</Text>
+                                <Text>{`Мин. цена: ${need.min_price}, Макс. цена: ${need.max_price}`}</Text>
+                                <Text>{`Мин. площадь: ${need.min_area || "-"}, Макс. площадь: ${need.max_area || "-"}`}</Text>
+                                {need.property_type === "Квартира" && (
+                                    <>
+                                        <Text>{`Комнаты: от ${need.min_rooms || "-"} до ${need.max_rooms || "-"}`}</Text>
+                                        <Text>{`Этаж: от ${need.min_floor || "-"} до ${need.max_floor || "-"}`}</Text>
+                                    </>
+                                )}
+                                {need.property_type === "Дом" && (
+                                    <>
+                                        <Text>{`Этажность: от ${need.min_floors || "-"} до ${need.max_floors || "-"}`}</Text>
+                                    </>
+                                )}
+                            </View>
+                            <View style={baseStyles.objectActionButtons}>
+                                <Button
+                                    title="Редактировать"
+                                    onPress={() => handleEdit(need)}
+                                />
+                                <Button
+                                    title="Удалить"
+                                    onPress={() =>
+                                        handleDelete(
+                                            "needs",
+                                            need.id,
+                                            fetchNeeds,
+                                        )
+                                    }
+                                    color="red"
+                                />
+                            </View>
                         </View>
-                        <View style={baseStyles.objectActionButtons}>
-                            <Button
-                                title="Редактировать"
-                                onPress={() => handleEdit(item)}
-                            />
-                            <Button
-                                title="Удалить"
-                                onPress={() =>
-                                    handleDelete("needs", item.id, fetchNeeds)
-                                }
-                                color="red"
-                            />
-                        </View>
-                    </View>
-                ))
-            ) : (
-                <Text>Список потребностей пуст.</Text>
-            )}
-            <NeedForm
-                isVisible={formVisible}
-                onClose={handleCloseForm}
-                onUpdate={handleUpdate}
-                need={currentItem}
-            />
-        </ScrollView>
+                    ))
+                ) : (
+                    <Text>Список потребностей пуст.</Text>
+                )}
+                <NeedForm
+                    isVisible={formVisible}
+                    onClose={handleCloseForm}
+                    onUpdate={handleUpdate}
+                    need={currentItem}
+                />
+            </ScrollView>
+        </View>
     );
 }
 
-export default NeedsList;
+export default NeedsPage;

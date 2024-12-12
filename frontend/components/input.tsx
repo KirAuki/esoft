@@ -38,7 +38,7 @@ function Input({
 const styles = StyleSheet.create({
     inputContainer: {
         marginVertical: 8,
-        minWidth: 400,
+        minWidth: "80%",
     },
     label: {
         fontSize: 16,

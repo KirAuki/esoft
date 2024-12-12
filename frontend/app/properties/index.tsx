@@ -16,10 +16,10 @@ import {
 import { Property } from "@/types/types";
 import { handleDelete } from "@/hooks/handleDelete";
 import PropertyForm from "@/components/forms/PropertiesForm";
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
 
-function PropertiesList() {
+function PropertiesPage() {
     const {
         formVisible,
         currentItem,
@@ -100,101 +100,111 @@ function PropertiesList() {
     }
 
     return (
-        <ScrollView contentContainerStyle={baseStyles.container}>
-            <View style={baseStyles.searchControls}>
-                <Text>Поиск по адресу</Text>
-                <Switch
-                    value={searchType === "polygon"}
-                    onValueChange={toggleSearchType}
-                />
-                <Text>Поиск по региону</Text>
-            </View>
+        <View style={baseStyles.container}>
+            <ScrollView
+                contentContainerStyle={baseStyles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+            >
+                <View style={baseStyles.searchControls}>
+                    <Text>Поиск по адресу</Text>
+                    <Switch
+                        value={searchType === "polygon"}
+                        onValueChange={toggleSearchType}
+                    />
+                    <Text>Поиск по региону</Text>
+                </View>
 
-            {/* Поле для ввода адреса или координат */}
-            {searchType === "address" ? (
-                <TextInput
-                    placeholder="Введите адрес для поиска..."
-                    value={searchQuery}
-                    onChangeText={handleSearchChange}
-                    onSubmitEditing={handleSearchSubmit}
-                    returnKeyType="search"
-                    style={baseStyles.searchInput}
-                />
-            ) : (
-                <TextInput
-                    placeholder="Введите координаты региона через запятую..."
-                    value={polygonCoordinates.join(", ")}
-                    onChangeText={(text) =>
-                        setPolygonCoordinates(
-                            text.split(",").map((s) => s.trim()),
-                        )
-                    }
-                    style={baseStyles.searchInput}
-                />
-            )}
+                {/* Поле для ввода адреса или координат */}
+                {searchType === "address" ? (
+                    <TextInput
+                        placeholder="Введите адрес для поиска..."
+                        value={searchQuery}
+                        onChangeText={handleSearchChange}
+                        onSubmitEditing={handleSearchSubmit}
+                        returnKeyType="search"
+                        style={baseStyles.searchInput}
+                    />
+                ) : (
+                    <TextInput
+                        placeholder="Введите координаты региона через запятую..."
+                        value={polygonCoordinates.join(", ")}
+                        onChangeText={(text) =>
+                            setPolygonCoordinates(
+                                text.split(",").map((s) => s.trim()),
+                            )
+                        }
+                        style={baseStyles.searchInput}
+                    />
+                )}
 
-            <View style={baseStyles.filterButtons}>
-                {["Квартира", "Дом", "Земля"].map((type) => (
-                    <TouchableOpacity
-                        key={type}
-                        style={[
-                            baseStyles.filterButton,
-                            propertyType === type && baseStyles.selectedButton,
-                        ]}
-                        onPress={() => setPropertyType(type)}
-                    >
-                        <Text
+                <View style={baseStyles.filterButtons}>
+                    {["Квартира", "Дом", "Земля"].map((type) => (
+                        <TouchableOpacity
+                            key={type}
                             style={[
-                                baseStyles.filterButtonText,
+                                baseStyles.filterButton,
                                 propertyType === type &&
-                                    baseStyles.selectedButtonText,
+                                    baseStyles.selectedButton,
                             ]}
+                            onPress={() => setPropertyType(type)}
                         >
-                            {type}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-            <Button title="Создать новое имущество" onPress={handleCreate} />
-            {properties.length > 0 ? (
-                properties.map((item) => (
-                    <View key={item.id} style={baseStyles.objectsContainer}>
-                        <View style={baseStyles.objectInfo}>
-                            <Text>{`Тип: ${item.property_type}`}</Text>
-                            <Text>{`Адрес: ${item.address}`}</Text>
-                            <Text>{`Площадь: ${item.area || "не указана"}, Комнаты: ${item.rooms || "не указано"}, Этаж: ${item.floor || "не указан"}, Этажность: ${item.floors || "не указана"}`}</Text>
+                            <Text
+                                style={[
+                                    baseStyles.filterButtonText,
+                                    propertyType === type &&
+                                        baseStyles.selectedButtonText,
+                                ]}
+                            >
+                                {type}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+                <Button title="Создать недвижимость" onPress={handleCreate} />
+                {properties.length > 0 ? (
+                    properties.map((property) => (
+                        <View
+                            key={property.id}
+                            style={baseStyles.objectsContainer}
+                        >
+                            <View style={baseStyles.objectInfo}>
+                                <Text>{`Тип: ${property.property_type}`}</Text>
+                                <Text>{`Адрес: ${property.address}`}</Text>
+                                <Text>{`Площадь: ${property.area || "-"}, Комнаты: ${property.rooms || "-"}, Этаж: ${property.floor || "-"}, Этажность: ${property.floors || "-"}`}</Text>
+                            </View>
+                            <View style={baseStyles.objectActionButtons}>
+                                <Button
+                                    title="Редактировать"
+                                    onPress={() => handleEdit(property)}
+                                />
+                                <Button
+                                    title="Удалить"
+                                    onPress={() =>
+                                        handleDelete(
+                                            "properties",
+                                            property.id,
+                                            fetchProperties,
+                                        )
+                                    }
+                                    color="red"
+                                />
+                            </View>
                         </View>
-                        <View style={baseStyles.objectActionButtons}>
-                            <Button
-                                title="Редактировать"
-                                onPress={() => handleEdit(item)}
-                            />
-                            <Button
-                                title="Удалить"
-                                onPress={() =>
-                                    handleDelete(
-                                        "properties",
-                                        item.id,
-                                        fetchProperties,
-                                    )
-                                }
-                                color="red"
-                            />
-                        </View>
-                    </View>
-                ))
-            ) : (
-                <Text>Список объектов недвижимости пуст.</Text>
-            )}
+                    ))
+                ) : (
+                    <Text>Список объектов недвижимости пуст.</Text>
+                )}
 
-            <PropertyForm
-                property={currentItem}
-                isVisible={formVisible}
-                onClose={handleCloseForm}
-                onUpdate={handleUpdate}
-            />
-        </ScrollView>
+                <PropertyForm
+                    property={currentItem}
+                    isVisible={formVisible}
+                    onClose={handleCloseForm}
+                    onUpdate={handleUpdate}
+                />
+            </ScrollView>
+        </View>
     );
 }
 
-export default PropertiesList;
+export default PropertiesPage;

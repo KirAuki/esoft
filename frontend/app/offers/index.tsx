@@ -11,10 +11,10 @@ import {
     Text,
     ScrollView,
 } from "react-native";
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
 
-function OffersList() {
+function OffersPage() {
     const {
         formVisible,
         currentItem,
@@ -49,43 +49,56 @@ function OffersList() {
     }
 
     return (
-        <ScrollView contentContainerStyle={baseStyles.container}>
-            <Button title="Создать предложение" onPress={handleCreate} />
-            {offers.length > 0 ? (
-                offers.map((item) => (
-                    <View key={item.id} style={baseStyles.objectsContainer}>
-                        <View style={baseStyles.objectInfo}>
-                            <Text>{`Клиент: ${item.client.full_name || "Не указано"}`}</Text>
-                            <Text>{`Риэлтор: ${item.realtor.full_name}`}</Text>
-                            <Text>{`Объект недвижимости: ${item.property.property_type}, ${item.property.address}`}</Text>
-                            <Text>{`Цена: ${item.price}`}</Text>
+        <View style={baseStyles.container}>
+            <ScrollView
+                contentContainerStyle={baseStyles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+            >
+                <Button title="Создать предложение" onPress={handleCreate} />
+                {offers.length > 0 ? (
+                    offers.map((offer) => (
+                        <View
+                            key={offer.id}
+                            style={baseStyles.objectsContainer}
+                        >
+                            <View style={baseStyles.objectInfo}>
+                                <Text>{`Клиент: ${offer.client.full_name || "Не указано"}`}</Text>
+                                <Text>{`Риэлтор: ${offer.realtor.full_name}`}</Text>
+                                <Text>{`Объект недвижимости: ${offer.property.property_type}, ${offer.property.address}`}</Text>
+                                <Text>{`Цена: ${offer.price}`}</Text>
+                            </View>
+                            <View style={baseStyles.objectActionButtons}>
+                                <Button
+                                    title="Редактировать"
+                                    onPress={() => handleEdit(offer)}
+                                />
+                                <Button
+                                    title="Удалить"
+                                    onPress={() =>
+                                        handleDelete(
+                                            "offers",
+                                            offer.id,
+                                            fetchOffers,
+                                        )
+                                    }
+                                    color="red"
+                                />
+                            </View>
                         </View>
-                        <View style={baseStyles.objectActionButtons}>
-                            <Button
-                                title="Редактировать"
-                                onPress={() => handleEdit(item)}
-                            />
-                            <Button
-                                title="Удалить"
-                                onPress={() =>
-                                    handleDelete("offers", item.id, fetchOffers)
-                                }
-                                color="red"
-                            />
-                        </View>
-                    </View>
-                ))
-            ) : (
-                <Text>Список предложений пуст.</Text>
-            )}
-            <OfferForm
-                isVisible={formVisible}
-                onClose={handleCloseForm}
-                onUpdate={handleUpdate}
-                offer={currentItem}
-            />
-        </ScrollView>
+                    ))
+                ) : (
+                    <Text>Список предложений пуст.</Text>
+                )}
+                <OfferForm
+                    isVisible={formVisible}
+                    onClose={handleCloseForm}
+                    onUpdate={handleUpdate}
+                    offer={currentItem}
+                />
+            </ScrollView>
+        </View>
     );
 }
 
-export default OffersList;
+export default OffersPage;

@@ -6,12 +6,16 @@ import {
     TouchableOpacity,
     StyleSheet,
     Button,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import Input from "../input";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "@/constants/Api";
 import { Errors, Realtor } from "@/types/types";
+import { formStyles } from "@/styles/formStyles";
 
 interface RealtorFormProps {
     realtor?: Realtor | null;
@@ -114,90 +118,82 @@ function RealtorForm({
             animationType="slide"
             onRequestClose={onClose}
         >
-            <View style={styles.container}>
-                <Text style={styles.title}>
-                    {realtor ? "Редактирование риэлтора" : "Создание риэлтора"}
-                </Text>
-                <Input
-                    label="Фамилия"
-                    value={lastName}
-                    onChange={setLastName}
-                    isRequired
-                />
-                {errors.lastName && (
-                    <Text style={styles.errorText}>{errors.lastName}</Text>
-                )}
-                <Input
-                    label="Имя"
-                    value={firstName}
-                    onChange={setFirstName}
-                    isRequired
-                />
-                {errors.firstName && (
-                    <Text style={styles.errorText}>{errors.firstName}</Text>
-                )}
-                <Input
-                    label="Отчество"
-                    value={patronymic}
-                    onChange={setPatronymic}
-                    isRequired
-                />
-                {errors.patronymic && (
-                    <Text style={styles.errorText}>{errors.patronymic}</Text>
-                )}
-                <Input
-                    label="Доля от комиссии (%)"
-                    value={commissionShare || ""}
-                    onChange={setCommissionShare}
-                    keyboardType="numeric"
-                    placeholder="Введите процент от комиссии"
-                />
-                {errors.commissionShare && (
-                    <Text style={styles.errorText}>
-                        {errors.commissionShare}
-                    </Text>
-                )}
-                <Button
-                    title={realtor ? "Сохранить" : "Создать"}
-                    onPress={handleSubmit}
-                    disabled={loading}
-                />
-
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>Закрыть</Text>
-                </TouchableOpacity>
-            </View>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+                <ScrollView
+                    contentContainerStyle={formStyles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
+                    <View style={formStyles.container}>
+                        <Text style={formStyles.title}>
+                            {realtor
+                                ? "Редактирование риэлтора"
+                                : "Создание риэлтора"}
+                        </Text>
+                        <Input
+                            label="Фамилия"
+                            value={lastName}
+                            onChange={setLastName}
+                            isRequired
+                        />
+                        {errors.lastName && (
+                            <Text style={formStyles.errorText}>
+                                {errors.lastName}
+                            </Text>
+                        )}
+                        <Input
+                            label="Имя"
+                            value={firstName}
+                            onChange={setFirstName}
+                            isRequired
+                        />
+                        {errors.firstName && (
+                            <Text style={formStyles.errorText}>
+                                {errors.firstName}
+                            </Text>
+                        )}
+                        <Input
+                            label="Отчество"
+                            value={patronymic}
+                            onChange={setPatronymic}
+                            isRequired
+                        />
+                        {errors.patronymic && (
+                            <Text style={formStyles.errorText}>
+                                {errors.patronymic}
+                            </Text>
+                        )}
+                        <Input
+                            label="Доля от комиссии (%)"
+                            value={commissionShare || ""}
+                            onChange={setCommissionShare}
+                            keyboardType="numeric"
+                            placeholder="Введите процент от комиссии"
+                        />
+                        {errors.commissionShare && (
+                            <Text style={formStyles.errorText}>
+                                {errors.commissionShare}
+                            </Text>
+                        )}
+                        <View style={formStyles.actionButtons}>
+                            <Button
+                                title={realtor ? "Сохранить" : "Создать"}
+                                onPress={handleSubmit}
+                                disabled={loading}
+                            />
+                            <Button
+                                title="Закрыть"
+                                onPress={onClose}
+                                color="red"
+                            />
+                        </View>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 16,
-    },
-    errorText: {
-        color: "red",
-        fontSize: 12,
-        marginBottom: 8,
-    },
-    closeButton: {
-        alignSelf: "center",
-        marginTop: 16,
-        padding: 10,
-        borderRadius: 4,
-    },
-    closeButtonText: {
-        color: "#ff0000",
-        fontSize: 16,
-    },
-});
-
 export default RealtorForm;

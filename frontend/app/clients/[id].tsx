@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Text, Button, ActivityIndicator, ScrollView,StyleSheet, View } from "react-native";
+import {
+    Text,
+    Button,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    View,
+} from "react-native";
 import axios from "axios";
 import { Client } from "@/types/types";
 import { useLocalSearchParams } from "expo-router";
 import ClientForm from "@/components/forms/ClientForm";
 import { API_BASE_URL } from "@/constants/Api";
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
 import RelatedList from "@/components/RelatedList";
 
@@ -63,8 +70,6 @@ function ClientDetails() {
     );
 }
 
-const styles = StyleSheet.create({
-    
-});
+const styles = StyleSheet.create({});
 
 export default ClientDetails;

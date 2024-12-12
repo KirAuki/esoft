@@ -12,7 +12,7 @@ import { Realtor } from "@/types/types";
 import { useLocalSearchParams } from "expo-router";
 import RealtorForm from "@/components/forms/RealtorForm";
 import { API_BASE_URL } from "@/constants/Api";
-import { baseStyles } from "@/styles/baseStyle";
+import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
 import RelatedList from "@/components/RelatedList";
 
@@ -49,10 +49,10 @@ function RealtorDetails() {
             <Text>{`Коммисия: ${realtor?.commission_share || "-"}`}</Text>
 
             <Button
-                title="Редактировать клиента"
+                title="Редактировать риелтора"
                 onPress={() => setFormVisible(true)}
             />
-            
+
             <RelatedList realtorId={Number(id)} />
 
             <RealtorForm

@@ -103,7 +103,7 @@ class Property(models.Model):
         components = [
             self.city,
             self.street,
-            f"д.{self.house_number}",
+            f"д.{self.house_number}" if self.house_number else None,
             f"кв. {self.apartment_number}" if self.apartment_number else None
         ]
         return ", ".join(filter(None, components))
@@ -132,7 +132,7 @@ class Offer(models.Model):
         return Deal.objects.filter(offer=self).exists()
 
     def __str__(self):
-        return f"Offer for {self.property.address} by {self.client} with price {self.price}"
+        return f"Предложение для адреса {self.property.address} от {self.client} с ценной {self.price}"
 
     class Meta:
         constraints = [
@@ -151,7 +151,10 @@ class Need(models.Model):
         related_name='realtor_needs'
     )
     property_type = models.CharField(max_length=10, choices=PropertyType.choices)
-    address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    street = models.CharField(max_length=100, blank=True, null=True)
+    house_number = models.CharField(max_length=10, blank=True, null=True)
+    apartment_number = models.CharField(max_length=10, blank=True, null=True)
     min_price = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     max_price = models.PositiveIntegerField(validators=[MinValueValidator(1)])
 
@@ -167,10 +170,6 @@ class Need(models.Model):
     min_floors = models.IntegerField(blank=True, null=True)
     max_floors = models.IntegerField(blank=True, null=True)
 
-    # Дополнительные поля для земли
-    min_land_area = models.FloatField(blank=True, null=True)
-    max_land_area = models.FloatField(blank=True, null=True)
-
     # Метод для проверки, участвует ли потребность в сделке
     def is_in_deal(self):
         return Deal.objects.filter(need=self).exists()
@@ -181,7 +180,17 @@ class Need(models.Model):
         super().delete(*args, **kwargs)
 
     def __str__(self):
-        return f"Need by {self.client} for {self.get_property_type_display()} at {self.address}"
+        return f"Потребность для {self.client} в {self.get_property_type_display()} по адресу {self.address}"
+    
+    @property
+    def address(self):
+        components = [
+            self.city,
+            self.street,
+            f"д.{self.house_number}" if self.house_number else None,
+            f"кв. {self.apartment_number}" if self.apartment_number else None
+        ]
+        return ", ".join(filter(None, components))
     
     class Meta:
         constraints = [

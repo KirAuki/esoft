@@ -26,6 +26,7 @@ export function useForm<T>(initialState: T | null, fetchData: () => void) {
     return {
         formVisible,
         currentItem,
+        setCurrentItem,
         setFormVisible,
         handleCreate,
         handleEdit,

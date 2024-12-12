@@ -7,11 +7,15 @@ import {
     StyleSheet,
     Modal,
     TouchableOpacity,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import axios from "axios";
 import Input from "../input";
 import { API_BASE_URL } from "@/constants/Api";
 import { Client, Errors } from "@/types/types";
+import { formStyles } from "@/styles/formStyles";
 
 interface ClientFormProps {
     client?: Client | null;
@@ -108,84 +112,82 @@ function ClientForm({ client, isVisible, onClose, onUpdate }: ClientFormProps) {
             animationType="slide"
             onRequestClose={onClose}
         >
-            <View style={styles.container}>
-                <Text style={styles.title}>
-                    {client ? "Редактирование клиента" : "Создание клиента"}
-                </Text>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+                <ScrollView
+                    contentContainerStyle={formStyles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
+                    <View style={formStyles.container}>
+                        <Text style={formStyles.title}>
+                            {client
+                                ? "Редактирование клиента"
+                                : "Создание клиента"}
+                        </Text>
 
-                <Input
-                    label="Фамилия"
-                    value={lastName}
-                    onChange={setLastName}
-                />
-                <Input label="Имя" value={firstName} onChange={setFirstName} />
-                <Input
-                    label="Отчество"
-                    value={patronymic}
-                    onChange={setPatronymic}
-                />
-                <Input
-                    label="Телефон"
-                    value={phone}
-                    onChange={setPhone}
-                    placeholder="Введите телефон"
-                />
-                {errors.phone && (
-                    <Text style={styles.errorText}>{errors.phone}</Text>
-                )}
+                        <Input
+                            label="Фамилия"
+                            value={lastName}
+                            onChange={setLastName}
+                        />
+                        <Input
+                            label="Имя"
+                            value={firstName}
+                            onChange={setFirstName}
+                        />
+                        <Input
+                            label="Отчество"
+                            value={patronymic}
+                            onChange={setPatronymic}
+                        />
+                        <Input
+                            label="Телефон"
+                            value={phone}
+                            onChange={setPhone}
+                            placeholder="Введите телефон"
+                        />
+                        {errors.phone && (
+                            <Text style={formStyles.errorText}>
+                                {errors.phone}
+                            </Text>
+                        )}
 
-                <Input
-                    label="Электронная почта"
-                    value={email}
-                    onChange={setEmail}
-                    placeholder="Введите почту"
-                />
-                {errors.email && (
-                    <Text style={styles.errorText}>{errors.email}</Text>
-                )}
-                {errors.phone_email && (
-                    <Text style={styles.errorText}>{errors.phone_email}</Text>
-                )}
-
-                <Button
-                    title={client ? "Сохранить" : "Создать"}
-                    onPress={handleSubmit}
-                    disabled={loading}
-                />
-
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>Закрыть</Text>
-                </TouchableOpacity>
-            </View>
+                        <Input
+                            label="Электронная почта"
+                            value={email}
+                            onChange={setEmail}
+                            placeholder="Введите почту"
+                        />
+                        {errors.email && (
+                            <Text style={formStyles.errorText}>
+                                {errors.email}
+                            </Text>
+                        )}
+                        {errors.phone_email && (
+                            <Text style={formStyles.errorText}>
+                                {errors.phone_email}
+                            </Text>
+                        )}
+                        <View style={formStyles.actionButtons}>
+                            <Button
+                                title={client ? "Сохранить" : "Создать"}
+                                onPress={handleSubmit}
+                                disabled={loading}
+                            />
+                            <Button
+                                title="Закрыть"
+                                onPress={onClose}
+                                color="red"
+                            />
+                        </View>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 16,
-    },
-    errorText: {
-        color: "red",
-        fontSize: 12,
-        marginBottom: 8,
-    },
-    closeButton: {
-        marginTop: 16,
-        padding: 10,
-        borderRadius: 4,
-    },
-    closeButtonText: {
-        color: "#ff0000",
-    },
-});
 
 export default ClientForm;

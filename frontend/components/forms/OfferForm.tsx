@@ -10,10 +10,13 @@ import {
     TouchableOpacity,
     StyleSheet,
     ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { Offer, Client, Realtor, Property } from "@/types/types";
 import Dropdown from "../Dropdown";
 import Input from "../input";
+import { formStyles } from "@/styles/formStyles";
 
 type OfferFormProps = {
     offer?: Offer | null;
@@ -126,109 +129,107 @@ function OfferForm({ offer, isVisible, onClose, onUpdate }: OfferFormProps) {
             animationType="slide"
             onRequestClose={onClose}
         >
-            <ScrollView contentContainerStyle={styles.container}>
-                <Text style={styles.title}>
-                    {offer
-                        ? "Редактирование предложения"
-                        : "Создание предложения"}
-                </Text>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+                <ScrollView
+                    contentContainerStyle={formStyles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                >
+                    <View style={formStyles.container}>
+                        <Text style={formStyles.title}>
+                            {offer
+                                ? "Редактирование предложения"
+                                : "Создание предложения"}
+                        </Text>
 
-                <Dropdown
-                    label="Клиент"
-                    selectedValue={clientId || ""}
-                    onValueChange={(value) => setClientId(Number(value))}
-                    options={clients.map((client) => ({
-                        label:
-                            client.full_name || client.email || client.phone as string ,
-                        value: client.id,
-                    }))}
-                />
-                {errors.clientId && (
-                    <Text style={styles.errorText}>{errors.clientId}</Text>
-                )}
+                        <Dropdown
+                            label="Клиент"
+                            selectedValue={clientId || ""}
+                            onValueChange={(value) =>
+                                setClientId(Number(value))
+                            }
+                            options={clients.map((client) => ({
+                                label:
+                                    client.full_name ||
+                                    client.email ||
+                                    (client.phone as string),
+                                value: client.id,
+                            }))}
+                        />
+                        {errors.clientId && (
+                            <Text style={formStyles.errorText}>
+                                {errors.clientId}
+                            </Text>
+                        )}
 
-                <Dropdown
-                    label="Риэлтор"
-                    selectedValue={realtorId || ""}
-                    onValueChange={(value) => setRealtorId(Number(value))}
-                    options={realtors.map((realtor) => ({
-                        label:
-                            realtor.full_name ||
-                            `${realtor.last_name} ${realtor.first_name}`,
-                        value: realtor.id,
-                    }))}
-                />
-                {errors.realtorId && (
-                    <Text style={styles.errorText}>{errors.realtorId}</Text>
-                )}
+                        <Dropdown
+                            label="Риэлтор"
+                            selectedValue={realtorId || ""}
+                            onValueChange={(value) =>
+                                setRealtorId(Number(value))
+                            }
+                            options={realtors.map((realtor) => ({
+                                label:
+                                    realtor.full_name ||
+                                    `${realtor.last_name} ${realtor.first_name}`,
+                                value: realtor.id,
+                            }))}
+                        />
+                        {errors.realtorId && (
+                            <Text style={formStyles.errorText}>
+                                {errors.realtorId}
+                            </Text>
+                        )}
 
-                <Dropdown
-                    label="Объект недвижимости"
-                    selectedValue={propertyId || ""}
-                    onValueChange={(value) => setPropertyId(Number(value))}
-                    options={properties.map((property) => ({
-                        label: property.address || `Объект №${property.id}`,
-                        value: property.id,
-                    }))}
-                />
-                {errors.propertyId && (
-                    <Text style={styles.errorText}>{errors.propertyId}</Text>
-                )}
+                        <Dropdown
+                            label="Объект недвижимости"
+                            selectedValue={propertyId || ""}
+                            onValueChange={(value) =>
+                                setPropertyId(Number(value))
+                            }
+                            options={properties.map((property) => ({
+                                label:
+                                    property.address ||
+                                    `Объект №${property.id}`,
+                                value: property.id,
+                            }))}
+                        />
+                        {errors.propertyId && (
+                            <Text style={formStyles.errorText}>
+                                {errors.propertyId}
+                            </Text>
+                        )}
 
-                <Input
-                    label="Цена"
-                    value={price}
-                    onChange={setPrice}
-                    keyboardType="numeric"
-                />
-                {errors.price && (
-                    <Text style={styles.errorText}>{errors.price}</Text>
-                )}
-                <View style={styles.actionButtons}>
-                    <Button
-                        title={offer ? "Сохранить" : "Создать"}
-                        onPress={handleSubmit}
-                        disabled={loading}
-                    />
-                    <Button title="Закрыть" onPress={onClose} color="red" />
-                </View>
-            </ScrollView>
+                        <Input
+                            label="Цена"
+                            value={price}
+                            onChange={setPrice}
+                            keyboardType="numeric"
+                        />
+                        {errors.price && (
+                            <Text style={formStyles.errorText}>
+                                {errors.price}
+                            </Text>
+                        )}
+                        <View style={formStyles.actionButtons}>
+                            <Button
+                                title={offer ? "Сохранить" : "Создать"}
+                                onPress={handleSubmit}
+                                disabled={loading}
+                            />
+                            <Button
+                                title="Закрыть"
+                                onPress={onClose}
+                                color="red"
+                            />
+                        </View>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingInline: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 16,
-        marginTop: 40,
-    },
-    errorText: {
-        color: "red",
-        fontSize: 12,
-        marginBottom: 8,
-    },
-    actionButtons: {
-        flexDirection: "row",
-        gap: 10,
-        paddingVertical: 16,
-    },
-    closeButton: {
-        marginTop: 16,
-        padding: 10,
-        borderRadius: 4,
-    },
-    closeButtonText: {
-        color: "#ff0000",
-        fontSize: 16,
-    },
-});
-
 export default OfferForm;
