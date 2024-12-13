@@ -20,7 +20,12 @@ interface OfferSelectorProps {
     needId?: number; // Параметр, передаваемый для фильтрации
 }
 
-function OfferSelector({ isVisible, onClose, onSelect, needId }: OfferSelectorProps) {
+function OfferSelector({
+    isVisible,
+    onClose,
+    onSelect,
+    needId,
+}: OfferSelectorProps) {
     const [offers, setOffers] = useState<Offer[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -47,7 +52,11 @@ function OfferSelector({ isVisible, onClose, onSelect, needId }: OfferSelectorPr
     };
 
     return (
-        <Modal visible={isVisible} animationType="slide" onRequestClose={onClose}>
+        <Modal
+            visible={isVisible}
+            animationType="slide"
+            onRequestClose={onClose}
+        >
             <View style={formStyles.container}>
                 <ScrollView style={formStyles.scrollContainer}>
                     {loading ? (
@@ -63,11 +72,26 @@ function OfferSelector({ isVisible, onClose, onSelect, needId }: OfferSelectorPr
                                 }}
                             >
                                 <View style={baseStyles.objectInfo}>
-                                    <Text>Клиент: {offer.client.full_name}</Text>
-                                    <Text>Риелтор: {offer.realtor.full_name}</Text>
-                                    <Text>Недвижимость: {offer.property.property_type},{offer.property.address}</Text>
-                                    <Text>Площадь: {offer.property.area || "-"} , Комнаты: {offer.property.rooms || "-"}</Text>
-                                    <Text>Этаж: {offer.property.floor || "-"} , Этажность: {offer.property.floors || "-"}</Text>
+                                    <Text>
+                                        Клиент: {offer.client.full_name}
+                                    </Text>
+                                    <Text>
+                                        Риелтор: {offer.realtor.full_name}
+                                    </Text>
+                                    <Text>
+                                        Недвижимость:{" "}
+                                        {offer.property.property_type},
+                                        {offer.property.address}
+                                    </Text>
+                                    <Text>
+                                        Площадь: {offer.property.area || "-"} ,
+                                        Комнаты: {offer.property.rooms || "-"}
+                                    </Text>
+                                    <Text>
+                                        Этаж: {offer.property.floor || "-"} ,
+                                        Этажность:{" "}
+                                        {offer.property.floors || "-"}
+                                    </Text>
                                 </View>
                             </TouchableOpacity>
                         ))

@@ -1,28 +1,9 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router/stack';
 
-export default function RootLayout() {
-    return (
-        <Stack>
-            <Stack.Screen
-                name="/clients/index"
-                options={{ title: "Клиенты" }}
-            />
-            <Stack.Screen
-                name="/realtors/index"
-                options={{ title: "Риелторы" }}
-            />
-            <Stack.Screen
-                name="/properties/index"
-                options={{ title: "Недвижимость" }}
-            />
-            <Stack.Screen
-                name="/offers/index"
-                options={{ headerTitle: "Предложения" }}
-            />
-            <Stack.Screen
-                name="/needs/index"
-                options={{ title: "Потребности" }}
-            />
-        </Stack>
-    );
+export default function Layout() {
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
+  );
 }

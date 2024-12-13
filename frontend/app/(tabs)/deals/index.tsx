@@ -14,8 +14,8 @@ import { useFocusEffect } from "expo-router";
 import { handleDelete } from "@/hooks/handleDelete";
 import { baseStyles } from "@/styles/baseStyles";
 import { useForm } from "@/hooks/useForm";
-import DealDetailsModal from "./dealDetailsModal";
 import DealForm from "@/components/forms/DealForm";
+import DealDetailsModal from "@/components/dealDetailsModal";
 
 function DealsPage() {
     const {

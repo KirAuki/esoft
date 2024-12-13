@@ -299,7 +299,7 @@ function NeedForm({ need, isVisible, onClose, onUpdate }: NeedFormProps) {
                         />
 
                         {propertyType === "Квартира" && (
-                            <>
+                            <View>
                                 <Input
                                     label="Минимум комнат"
                                     value={minRooms || ""}
@@ -324,11 +324,11 @@ function NeedForm({ need, isVisible, onClose, onUpdate }: NeedFormProps) {
                                     onChange={setMaxFloor}
                                     keyboardType="numeric"
                                 />
-                            </>
+                            </View>
                         )}
 
                         {propertyType === "Дом" && (
-                            <>
+                            <View>
                                 <Input
                                     label="Минимум комнат"
                                     value={minRooms || ""}
@@ -353,7 +353,7 @@ function NeedForm({ need, isVisible, onClose, onUpdate }: NeedFormProps) {
                                     onChange={setMaxFloors}
                                     keyboardType="numeric"
                                 />
-                            </>
+                            </View>
                         )}
                         <View style={formStyles.actionButtons}>
                             <Button

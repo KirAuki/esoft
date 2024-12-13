@@ -260,3 +260,24 @@ class Deal(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['need', 'offer'], name='unique_deal')
         ]
+
+
+class Act(models.Model):
+    ACT_TYPES = [
+        ('Встреча с клиентом', 'Встреча с клиентом'),
+        ('Показ', 'Показ'),
+        ('Запланированный звонок', 'Запланированный звонок'),
+    ]
+
+    date_time = models.DateTimeField(verbose_name="Дата и время события")
+    duration = models.DurationField(verbose_name="Длительность события")
+    act_type = models.CharField(
+        max_length=25, choices=ACT_TYPES, verbose_name="Тип события"
+    )
+    comment = models.TextField(verbose_name="Комментарий", blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.get_act_type_display()} на {self.date_time}"
+
+    class Meta:
+        ordering = ['date_time']

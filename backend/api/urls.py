@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from .views import ClientViewSet, DealViewSet, NeedViewSet, PropertyViewSet,OfferViewSet, RealtorViewSet
+from .views import ClientViewSet, DealViewSet, ActViewSet, NeedViewSet, PropertyViewSet,OfferViewSet, RealtorViewSet
 
 # Создание маршрутизаторов для viewset
 router = DefaultRouter()
@@ -10,6 +10,7 @@ router.register(r'properties', PropertyViewSet, basename='property')
 router.register(r'offers', OfferViewSet, basename='offer')
 router.register(r'needs', NeedViewSet, basename='need')
 router.register(r'deals', DealViewSet, basename='deal')
+router.register(r'acts', ActViewSet)
 
 urlpatterns = [
     # Включаем маршруты, созданные автоматически с помощью DefaultRouter

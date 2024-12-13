@@ -5,8 +5,6 @@ export const baseStyles = StyleSheet.create({
         minWidth: "100%",
         maxHeight: "100%",
         flex: 1,
-       
-        justifyContent: "space-between",
     },
     scrollContainer: {
         flexGrow: 1,

@@ -51,6 +51,7 @@ function PropertiesPage() {
                 if (searchType === "address") {
                     endpoint = `${API_BASE_URL}/properties/search_by_address/`;
                     params.query = searchQuery;
+                    console.log(searchQuery)
                 } else {
                     endpoint = `${API_BASE_URL}/properties/search_in_region/`;
                     params.coordinates = polygonCoordinates;

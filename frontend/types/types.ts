@@ -72,6 +72,14 @@ export interface Deal {
     offer: Offer;
 }
 
+export interface Act {
+    id: number;
+    date_time: string;
+    duration: number;
+    act_type: string;
+    comment: string;
+}
+
 export interface Errors {
     phone_email?: string;
     email?: string;

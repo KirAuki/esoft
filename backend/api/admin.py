@@ -1,7 +1,7 @@
 from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-from .models import Client, Deal, Need, Offer, Property, Realtor
+from .models import Client, Deal, Need, Offer, Property, Realtor,Act
 
 # Определение ресурсов для импорта/экспорта
 class ClientResource(resources.ModelResource):
@@ -85,3 +85,9 @@ class DealAdmin(ImportExportModelAdmin):
     list_display = ('id', 'need', 'offer')
     search_fields = ('need__client__first_name', 'need__client__last_name', 'offer__client__first_name', 'offer__client__last_name')
     list_filter = ('need__property_type',)
+
+
+@admin.register(Act)
+class Act(ImportExportModelAdmin):
+    list_display = ('id', 'date_time','duration','act_type','comment')
+    

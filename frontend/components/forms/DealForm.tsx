@@ -32,13 +32,12 @@ function DealForm({ isVisible, deal, onUpdate, onClose }: DealFormProps) {
     const [isNeedModalVisible, setNeedModalVisible] = useState(false);
     const [isOfferModalVisible, setOfferModalVisible] = useState(false);
 
-
     useEffect(() => {
         if (deal) {
             setSelectedNeed(deal.need);
             setSelectedOffer(deal.offer);
         }
-    }, [deal])
+    }, [deal]);
 
     const validateForm = () => {
         if (!selectedNeed || !selectedOffer) {
@@ -50,7 +49,7 @@ function DealForm({ isVisible, deal, onUpdate, onClose }: DealFormProps) {
     const handleClose = () => {
         setSelectedNeed(null);
         setSelectedOffer(null);
-        onClose(); 
+        onClose();
     };
 
     const handleSubmit = async () => {
@@ -152,6 +151,5 @@ function DealForm({ isVisible, deal, onUpdate, onClose }: DealFormProps) {
         </Modal>
     );
 }
-
 
 export default DealForm;

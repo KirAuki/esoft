@@ -20,7 +20,12 @@ interface NeedSelectorProps {
     offerId?: number; // Параметр, передаваемый для фильтрации
 }
 
-function NeedSelector({ isVisible, onClose, onSelect, offerId }: NeedSelectorProps) {
+function NeedSelector({
+    isVisible,
+    onClose,
+    onSelect,
+    offerId,
+}: NeedSelectorProps) {
     const [needs, setNeeds] = useState<Need[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -48,9 +53,12 @@ function NeedSelector({ isVisible, onClose, onSelect, offerId }: NeedSelectorPro
     };
 
     return (
-        <Modal visible={isVisible} animationType="slide" onRequestClose={onClose}>
+        <Modal
+            visible={isVisible}
+            animationType="slide"
+            onRequestClose={onClose}
+        >
             <View style={formStyles.container}>
-                
                 <ScrollView style={formStyles.scrollContainer}>
                     {loading ? (
                         <Text>Загрузка...</Text>
@@ -66,11 +74,19 @@ function NeedSelector({ isVisible, onClose, onSelect, offerId }: NeedSelectorPro
                             >
                                 <View style={baseStyles.objectInfo}>
                                     <Text>Клиент: {need.client.full_name}</Text>
-                                    <Text>Риелтор: {need.realtor.full_name}</Text>
+                                    <Text>
+                                        Риелтор: {need.realtor.full_name}
+                                    </Text>
                                     <Text>Адрес: {need.address}</Text>
-                                    <Text>Цена от {need.min_price} до {need.max_price} </Text>
-                                    <Text>Площадь от {need.min_area || "-"} до {need.max_area || "-"} </Text>
-                                </View> 
+                                    <Text>
+                                        Цена от {need.min_price} до{" "}
+                                        {need.max_price}{" "}
+                                    </Text>
+                                    <Text>
+                                        Площадь от {need.min_area || "-"} до{" "}
+                                        {need.max_area || "-"}{" "}
+                                    </Text>
+                                </View>
                             </TouchableOpacity>
                         ))
                     )}

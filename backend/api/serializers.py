@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Client, Deal, Need, Offer, Property, Realtor
+from .models import Act, Client, Deal, Need, Offer, Property, Realtor
 
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,7 +17,6 @@ class ClientSerializer(serializers.ModelSerializer):
         return data
 
 
-# Сериализатор для Риэлтора
 class RealtorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Realtor
@@ -239,3 +238,10 @@ class DealSerializer(serializers.ModelSerializer):
             },
         }
         return representation
+    
+
+
+class ActSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Act
+        fields = ['id', 'date_time', 'duration', 'act_type', 'comment']

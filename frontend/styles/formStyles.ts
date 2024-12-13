@@ -38,5 +38,4 @@ export const formStyles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: "#ccc",
     },
-    
 });

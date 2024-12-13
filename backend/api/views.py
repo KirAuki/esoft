@@ -1,10 +1,11 @@
+import datetime
 from django.forms import ValidationError
 import django_filters
 from rest_framework.decorators import api_view
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import  Client, Deal, Need, Offer,Property, Realtor
-from .serializers import ClientSerializer, DealSerializer, NeedSerializer, OfferSerializer, RealtorSerializer,PropertySerializer
+from .models import  Act, Client, Deal, Need, Offer,Property, Realtor
+from .serializers import ActSerializer, ClientSerializer, DealSerializer, NeedSerializer, OfferSerializer, RealtorSerializer,PropertySerializer
 from geopy.distance import geodesic
 from shapely.geometry import Point, Polygon
 import Levenshtein
@@ -206,7 +207,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def search_by_address(self, request):
         """
-        Нечёткий поиск объектов недвижимости по адресу.
+        Нечёткий поиск объектов недвижимости по адресу и типу.
         """
         query = request.query_params.get('query', '').strip().lower()
         if not query:
@@ -222,6 +223,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
                 'street': property.street or '',
                 'house_number': property.house_number or '',
                 'apartment_number': property.apartment_number or '',
+                'property_type': property.property_type or '',
             }
 
             distances = {
@@ -233,7 +235,8 @@ class PropertyViewSet(viewsets.ModelViewSet):
                 distances['city'] <= 3 or
                 distances['street'] <= 3 or
                 (distances['house_number'] <= 1 if matches['house_number'] else False) or
-                (distances['apartment_number'] <= 1 if matches['apartment_number'] else False)
+                (distances['apartment_number'] <= 1 if matches['apartment_number'] else False) or
+                distances['property_type'] <= 3
             ):
                 matching_properties.append(property)
 
@@ -421,4 +424,27 @@ class DealViewSet(viewsets.ModelViewSet):
         commissions = deal.calculate_commissions()
         return Response(commissions)
 
-    
+
+
+class ActViewSet(viewsets.ModelViewSet):
+    queryset = Act.objects.all()
+    serializer_class = ActSerializer
+
+    def get_queryset(self):
+        # Получаем только события на сегодня
+        today = datetime.date.today()
+        return Act.objects.filter(date_time__date=today)
+
+    @action(detail=False, methods=['post'])
+    def create_act(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+    @action(detail=True, methods=['delete'])
+    def delete_act(self, request, pk=None):
+        act = self.get_object()
+        act.delete()
+        return Response(status=204)
