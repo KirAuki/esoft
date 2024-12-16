@@ -1,6 +1,8 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
 from .views import ClientViewSet, DealViewSet, ActViewSet, NeedViewSet, PropertyViewSet,OfferViewSet, RealtorViewSet
+from django.conf import settings
+from django.conf.urls.static import static
 
 # Создание маршрутизаторов для viewset
 router = DefaultRouter()
@@ -18,4 +20,4 @@ urlpatterns = [
     # Дополнительные пути для кастомных действий
     path('properties/search/address/', PropertyViewSet.as_view({'get': 'search_by_address'}), name='property-search-by-address'),
     path('properties/search/polygon/', PropertyViewSet.as_view({'get': 'search_in_region'}), name='property-search-by-polygon'),
-]
+] 

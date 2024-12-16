@@ -69,6 +69,12 @@ export const baseStyles = StyleSheet.create({
         width: "100%",
         gap: 10,
     },
+    objectContiner: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        alignItems:'center'
+    },
     objectInfo: {
         flexDirection: "column",
         gap: 10,

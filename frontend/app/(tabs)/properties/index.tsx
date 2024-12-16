@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
     ScrollView,
     ActivityIndicator,
+    Image,
 } from "react-native";
 import { Property } from "@/types/types";
 import { handleDelete } from "@/hooks/handleDelete";
@@ -60,6 +61,7 @@ function PropertiesPage() {
 
             const response = await axios.get(endpoint, { params });
             setProperties(response.data);
+            console.log(response.data)
         } catch (error) {
             console.log("Ошибка при загрузке объектов недвижимости:", error);
             Alert.alert("Ошибка", "Не удалось загрузить данные.");
@@ -169,10 +171,20 @@ function PropertiesPage() {
                             key={property.id}
                             style={baseStyles.objectsContainer}
                         >
-                            <View style={baseStyles.objectInfo}>
-                                <Text>{`Тип: ${property.property_type}`}</Text>
-                                <Text>{`Адрес: ${property.address}`}</Text>
-                                <Text>{`Площадь: ${property.area || "-"}, Комнаты: ${property.rooms || "-"}, Этаж: ${property.floor || "-"}, Этажность: ${property.floors || "-"}`}</Text>
+                            <View style={baseStyles.objectContiner}>
+                                <View style={baseStyles.objectInfo}>
+                                    <Text>{`Тип: ${property.property_type}`}</Text>
+                                    <Text>{`Адрес: ${property.address}`}</Text>
+                                    <Text>{`Площадь: ${property.area || "-"}, Комнаты: ${property.rooms || "-"}, Этаж: ${property.floor || "-"}, Этажность: ${property.floors || "-"}`}</Text>
+                                </View>
+                                {property.image ? (
+                                    <Image
+                                        source={{ uri: property.image }}
+                                        style={{ width: 200, height: 200 }}
+                                    />
+                                ) : (
+                                    <Text>Фото не доступно</Text>
+                                )} 
                             </View>
                             <View style={baseStyles.objectActionButtons}>
                                 <Button

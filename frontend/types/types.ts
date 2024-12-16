@@ -31,6 +31,7 @@ export interface Property {
     floor?: number;
     rooms?: number;
     floors?: number;
+    image?: string
 }
 
 export interface Offer {

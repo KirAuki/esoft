@@ -74,7 +74,7 @@ class Property(models.Model):
     street = models.CharField(max_length=100, blank=True, null=True)
     house_number = models.CharField(max_length=10, blank=True, null=True)
     apartment_number = models.CharField(max_length=10, blank=True, null=True)
-    
+    image = models.ImageField(upload_to='property_images/', blank=True, null=True)
     # Координаты
     latitude = models.FloatField(
         blank=True, null=True,

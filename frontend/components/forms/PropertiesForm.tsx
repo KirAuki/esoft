@@ -10,11 +10,13 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Platform,
+    Image,
 } from "react-native";
 import { Property } from "@/types/types";
 import Input from "../input";
 import Dropdown from "../Dropdown";
 import { formStyles } from "@/styles/formStyles";
+import * as ImagePicker from "expo-image-picker";
 
 type PropertyFormProps = {
     property?: Property | null;
@@ -40,6 +42,7 @@ function PropertyForm({
     const [floor, setFloor] = useState<string>("");
     const [rooms, setRooms] = useState<string>("");
     const [floors, setFloors] = useState<string>("");
+    const [image, setImage] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -90,29 +93,49 @@ function PropertyForm({
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = () => {
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setImage(result.assets[0]);
+        }
+    };
+
+    const handleSubmit = async () => {
         if (validateForm()) {
-            const propertyData = {
-                property_type: propertyType,
-                city,
-                street,
-                house_number: Number(houseNumber),
-                apartment_number: Number(apartmentNumber),
-                latitude: latitude ? Number(latitude) : undefined,
-                longitude: longitude ? Number(longitude) : undefined,
-                area: area ? Number(area) : undefined,
-                floor: floor ? Number(floor) : undefined,
-                rooms: rooms ? Number(rooms) : undefined,
-                floors: floors ? Number(floors) : undefined,
-            };
-
+            const formData = new FormData();
+            
+            // Собираем другие данные
+            formData.append("property_type", propertyType);
+            formData.append("city", city);
+            formData.append("street", street);
+            formData.append("house_number", houseNumber);
+            formData.append("apartment_number", apartmentNumber);
+            formData.append("latitude", latitude);
+            formData.append("longitude", longitude);
+            formData.append("area", area);
+            formData.append("floor", floor);
+            formData.append("rooms", rooms);
+            formData.append("floors", floors);
+    
+            // Если изображение выбрано, добавляем его в FormData
+            if (image) {
+                const fileUri = image.uri;
+                const response = await fetch(fileUri);
+                const blob = await response.blob();
+                
+                formData.append("image", blob, "property_image.jpg");
+                console.log(image)
+            }
+    
             const apiCall = property
-                ? axios.put(
-                      `${API_BASE_URL}/properties/${property.id}/`,
-                      propertyData,
-                  )
-                : axios.post(`${API_BASE_URL}/properties/`, propertyData);
-
+                ? axios.put(`${API_BASE_URL}/properties/${property.id}/`, formData)
+                : axios.post(`${API_BASE_URL}/properties/`, formData);
+    
             setLoading(true);
             apiCall
                 .then(() => {
@@ -123,11 +146,11 @@ function PropertyForm({
                     onUpdate();
                     onClose();
                 })
-                .catch((errori) => {
-                    console.log(errori);
+                .catch((error) => {
+                    console.log(error);
                     Alert.alert(
                         "Ошибка",
-                        `Не удалось ${property ? "обновить" : "создать"} объект недвижимости. ${errori}`,
+                        `Не удалось ${property ? "обновить" : "создать"} объект недвижимости.`,
                     );
                 })
                 .finally(() => {
@@ -176,6 +199,17 @@ function PropertyForm({
                             <Text style={formStyles.errorText}>
                                 {errors.property_type}
                             </Text>
+                        )}
+
+                        <Button title="Выбрать изображение" onPress={pickImage} />
+                        {image && (
+                            <View>
+                                <Text>Выбранное изображение:</Text>
+                                <Image
+                                    source={{ uri: image.uri }}
+                                    style={{ width: 200, height: 200, marginTop: 10 }}
+                                />
+                            </View>
                         )}
 
                         <Input label="Город" value={city} onChange={setCity} />

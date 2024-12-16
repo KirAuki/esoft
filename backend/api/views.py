@@ -12,6 +12,7 @@ import Levenshtein
 from rest_framework import filters ,viewsets,status
 from rest_framework.exceptions import NotFound
 from django.db.models import Q
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class ClientViewSet(viewsets.ModelViewSet):
     """
@@ -179,6 +180,7 @@ class RealtorViewSet(viewsets.ModelViewSet):
 class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         """
@@ -203,6 +205,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
             )
 
         return queryset
+    
 
     @action(detail=False, methods=['get'])
     def search_by_address(self, request):

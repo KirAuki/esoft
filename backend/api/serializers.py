@@ -43,10 +43,9 @@ class PropertySerializer(serializers.ModelSerializer):
         model = Property
         fields = [
             'id', 'property_type', 'city', 'street', 'house_number', 'apartment_number',
-            'latitude', 'longitude', 'area', 'floor', 'rooms', 'floors', 'address'
+            'latitude', 'longitude', 'area', 'floor', 'rooms', 'floors', 'address','image'
         ]
-
-
+      
 
 class OfferSerializer(serializers.ModelSerializer):
     client = serializers.PrimaryKeyRelatedField(queryset=Client.objects.all())
